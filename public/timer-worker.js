@@ -8,24 +8,21 @@ let sessionDuration = 30 * 60; // Domyślna wartość
 
 // Funkcja do wysyłania logów do głównego wątku
 function workerLog(...args) {
-    // const message = args
-    //     .map((arg) =>
-    //         typeof arg === "object" ? JSON.stringify(arg) : String(arg)
-    //     )
-    //     .join(" ");
+    const message = args
+        .map((arg) =>
+            typeof arg === "object" ? JSON.stringify(arg) : String(arg)
+        )
+        .join(" ");
 
     self.postMessage({
         type: "LOG",
-        payload: args,
+        payload: message,
     });
-
-    // Zachowaj również standardowe logowanie w konsoli workera
-    //console.log(...args);
 }
 
 // Funkcja do wysyłania aktualizacji stanu do głównego wątku
 function sendStateUpdate(reason) {
-    workerLog(`[WORKER] Sent update: ${reason}`, );
+    workerLog(`[WORKER][01] Sent update: ${reason}`);
 
     self.postMessage({
         type: "UPDATE",
@@ -47,13 +44,13 @@ function sendSettingsUpdate(reason) {
         },
     });
 
-    workerLog(`[WORKER] Sent settings update: ${reason}`);
+    workerLog(`[WORKER][02] Sent settings update: ${reason}`);
 }
 
 // Obsługa wiadomości od głównego wątku
 self.onmessage = (e) => {
     const { type, payload } = e.data;
-    workerLog(`[WORKER] Received message from MAIN: ${type}`);
+    workerLog(`[WORKER][03] Received message from MAIN: ${type}`);
 
     switch (type) {
         case "START":
@@ -61,19 +58,19 @@ self.onmessage = (e) => {
             if (!timerId) {
                 startTimer();
             }
-            sendStateUpdate("START command");
+            sendStateUpdate("START command [04]");
             break;
 
         case "PAUSE":
             isRunning = false;
-            sendStateUpdate("PAUSE command");
+            sendStateUpdate("PAUSE command [05]");
             break;
 
         case "RESET":
             isRunning = false;
             sessionTimeLeft = sessionDuration;
             intervalTimeLeft = intervalDuration;
-            sendStateUpdate("RESET to INITIAL values");
+            sendStateUpdate("RESET to INITIAL values [06]");
             break;
 
         case "UPDATE_SETTINGS":
@@ -88,64 +85,95 @@ self.onmessage = (e) => {
             }
             sessionTimeLeft = sessionDuration;
             intervalTimeLeft = intervalDuration;
-            sendStateUpdate("UPDATE_SETTINGS command");
-            sendSettingsUpdate("UPDATE_SETTINGS command");
+            sendStateUpdate("UPDATE_SETTINGS command [07]");
+            sendSettingsUpdate("UPDATE_SETTINGS command [08]");
             break;
 
         case "GET_INITIAL_SETTINGS":
-            sendSettingsUpdate("GET_INITIAL_SETTINGS command");
-            sendStateUpdate("GET_INITIAL_SETTINGS command");
+            sendSettingsUpdate("GET_INITIAL_SETTINGS command [09]");
+            sendStateUpdate("GET_INITIAL_SETTINGS command [10]");
             break;
     }
 };
 
 // Funkcja rozpoczynająca odliczanie
 function startTimer() {
-    if (timerId) {
-        clearInterval(timerId);
-    }
-
-    workerLog("[WORKER] Starting timer");
+    workerLog("[WORKER][11] Starting timer");
 
     // Używamy Date.now() do dokładnego śledzenia czasu
     let lastTickTime = Date.now();
+    // Dodajemy zmienne do śledzenia czasu absolutnego
+    let sessionStartTime = Date.now();
+    let sessionElapsedBeforePause = 0;
+    let intervalStartTime = Date.now();
+    let intervalElapsedBeforePause = 0;
 
     timerId = setInterval(() => {
-        // Aktualizuj czas tylko jeśli timer jest uruchomiony
-        if (!isRunning) return;
+        // Jeśli timer jest zatrzymany, aktualizujemy punkt odniesienia
+        // aby nie liczyć czasu spędzonego na pauzie
+        if (!isRunning) {
+            // Zapisujemy ile czasu upłynęło przed pauzą
+            if (lastTickTime !== Date.now()) {
+                sessionElapsedBeforePause = sessionDuration - sessionTimeLeft;
+                intervalElapsedBeforePause =
+                    intervalDuration - intervalTimeLeft;
+            }
+            lastTickTime = Date.now();
+            workerLog("[WORKER][12] Timer paused, skipping tick");
+            return;
+        }
 
         const now = Date.now();
+
+        // Przy wznowieniu po pauzie, resetujemy punkty odniesienia
+        if (lastTickTime === now) {
+            sessionStartTime = now - sessionElapsedBeforePause * 1000;
+            intervalStartTime = now - intervalElapsedBeforePause * 1000;
+        }
+
         const deltaSeconds = Math.floor((now - lastTickTime) / 1000);
         if (deltaSeconds <= 0) return;
 
         lastTickTime = now;
 
-        // Aktualizuj czas sesji
-        if (sessionTimeLeft > 0) {
-            sessionTimeLeft = Math.max(0, sessionTimeLeft - deltaSeconds);
+        // Obliczamy czas sesji na podstawie absolutnego czasu, z korektą
+        const sessionElapsedSeconds = Math.floor(
+            (now - sessionStartTime) / 1000
+        );
+        sessionTimeLeft = Math.max(0, sessionDuration - sessionElapsedSeconds);
+
+        // Obliczamy czas interwału na podstawie absolutnego czasu, z korektą
+        let intervalElapsedSeconds = Math.floor(
+            (now - intervalStartTime) / 1000
+        );
+
+        // Sprawdzamy, czy interwał powinien się zresetować
+        if (intervalElapsedSeconds >= intervalDuration) {
+            // Resetujemy interwał, zachowując dokładność
+            const intervalCycles = Math.floor(
+                intervalElapsedSeconds / intervalDuration
+            );
+            intervalStartTime += intervalCycles * intervalDuration * 1000;
+            intervalElapsedSeconds = Math.floor(
+                (now - intervalStartTime) / 1000
+            );
         }
 
-        // Aktualizuj czas interwału
-        if (intervalTimeLeft > deltaSeconds) {
-            intervalTimeLeft -= deltaSeconds;
-        } else {
-            // Resetuj interwał, gdy osiągnie zero
-            intervalTimeLeft = intervalDuration;
-        }
+        intervalTimeLeft = intervalDuration - intervalElapsedSeconds;
 
         // Sprawdź, czy sesja się zakończyła
         if (sessionTimeLeft <= 0) {
             isRunning = false;
-            workerLog("[WORKER] Session ended, stopping timer");
+            workerLog("[WORKER][13] Session ended, stopping timer");
         }
 
         // Wyślij zaktualizowany stan do głównego wątku
-        sendStateUpdate("tick");
+        sendStateUpdate("tick [14]");
     }, 1000);
 }
 
 // Inicjalizacja workera
-workerLog("[WORKER] Worker initialized with settings:", {
+workerLog("[WORKER][14] Worker initialized with settings:", {
     sessionDuration,
     intervalDuration,
 });

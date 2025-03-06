@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useReducer } from "react";
 import { TimerDisplay } from "@/components/timer-display";
 import { BellLogo } from "@/components/bell-logo";
 import { TimerControls } from "@/components/timer-controls";
@@ -29,14 +29,17 @@ export function HabitTimer() {
     // Referencja do przechowywania ustawień timera z workera - bez wartości domyślnych
     const settingsRef = useRef<TimerSettings | null>(null);
 
-    // Stan do wymuszania przerenderowania komponentu
-    const [timerVersion, setTimerVersion] = useState(0);
+    // Usunięcie timerVersion
+    // const [timerVersion, setTimerVersion] = useState(0);
 
     // Usunięto stan do śledzenia inicjalizacji workera, będziemy używać referencji
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     // Stan do śledzenia, czy dialog ustawień jest otwarty
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+    // Dodanie funkcji forceUpdate
+    const forceUpdate = useReducer((x) => x + 1, 0)[1];
 
     // Web Worker reference
     const workerRef = useRef<Worker | null>(null);
@@ -48,11 +51,11 @@ export function HabitTimer() {
     useEffect(() => {
         // Create worker only on client side and only once
         if (typeof window !== "undefined" && !workerInitializedRef.current) {
-            console.log("[MAIN] Initializing Web Worker");
+            console.log("[MAIN][01] Initializing Web Worker");
 
             // Cleanup any existing worker
             if (workerRef.current) {
-                console.log("[MAIN] Terminating existing worker");
+                console.log("[MAIN][02] Terminating existing worker");
                 workerRef.current.terminate();
             }
 
@@ -70,7 +73,7 @@ export function HabitTimer() {
                 }
 
                 console.log(
-                    `[MAIN] Received message from worker: ${type}:`,
+                    `[MAIN][03] Received message from worker: ${type}`,
                     payload
                 );
 
@@ -79,13 +82,13 @@ export function HabitTimer() {
                     timerStateRef.current = payload;
 
                     // Wymuś przerenderowanie komponentu
-                    setTimerVersion((prev) => prev + 1);
+                    forceUpdate();
                 } else if (type === "SETTINGS_UPDATE") {
                     // Aktualizuj referencję ustawień timera
                     settingsRef.current = payload;
 
                     // Wymuś przerenderowanie komponentu
-                    setTimerVersion((prev) => prev + 1);
+                    forceUpdate();
                 }
             };
 
@@ -98,10 +101,8 @@ export function HabitTimer() {
 
     // Reset timer to initial state
     const resetTimer = useCallback(() => {
-        //console.log("[MAIN] resetTimer called, stack:", new Error().stack);
-
         if (workerRef.current) {
-            console.log("[MAIN] Sending RESET to worker");
+            console.log("[MAIN][04] Sending RESET to worker");
             workerRef.current.postMessage({ type: "RESET" });
         }
     }, []);
@@ -110,7 +111,7 @@ export function HabitTimer() {
     const saveSettings = useCallback(
         (newSessionDuration: number, newIntervalDuration: number) => {
             console.log(
-                `[MAIN] Saving new settings: session=${newSessionDuration}, interval=${newIntervalDuration}`
+                `[MAIN][05] Saving new settings: session=${newSessionDuration}, interval=${newIntervalDuration}`
             );
 
             // Send to worker (convert minutes to seconds)
@@ -131,7 +132,7 @@ export function HabitTimer() {
     const handleSettingsOpen = useCallback(() => {
         if (workerRef.current) {
             console.log(
-                "[MAIN] Requesting current settings before opening dialog"
+                "[MAIN][06] Requesting current settings before opening dialog"
             );
             workerRef.current.postMessage({ type: "GET_INITIAL_SETTINGS" });
         }
@@ -143,21 +144,21 @@ export function HabitTimer() {
         if (!workerRef.current || !timerStateRef.current) return;
 
         const command = timerStateRef.current.isRunning ? "PAUSE" : "START";
-        console.log(`[MAIN] Sending ${command} to worker`);
+        console.log(`[MAIN][07] Sending ${command} to worker`);
         workerRef.current.postMessage({ type: command });
     }, []);
 
     // Toggle fullscreen
     const toggleFullscreen = useCallback(() => {
         if (!document.fullscreenElement) {
-            console.log("[MAIN] Entering fullscreen mode");
+            console.log("[MAIN][08] Entering fullscreen mode");
             document.documentElement.requestFullscreen().catch((err) => {
                 console.error(
-                    `[MAIN] Error attempting to enable fullscreen: ${err.message}`
+                    `[MAIN][09] Error attempting to enable fullscreen: ${err.message}`
                 );
             });
         } else {
-            console.log("[MAIN] Exiting fullscreen mode");
+            console.log("[MAIN][10] Exiting fullscreen mode");
             if (document.exitFullscreen) {
                 document.exitFullscreen();
             }
@@ -168,7 +169,9 @@ export function HabitTimer() {
     useEffect(() => {
         const handleFullscreenChange = () => {
             const newIsFullscreen = !!document.fullscreenElement;
-            console.log(`[MAIN] Fullscreen state changed: ${newIsFullscreen}`);
+            console.log(
+                `[MAIN][11] Fullscreen state changed: ${newIsFullscreen}`
+            );
             setIsFullscreen(newIsFullscreen);
         };
 
@@ -181,10 +184,8 @@ export function HabitTimer() {
         };
     }, []);
 
-    // Debug logging for state changes
-    useEffect(() => {
-        console.log("[MAIN] Timer state updated in UI");
-    }, [timerVersion]); // Reaguj na zmiany timerVersion
+    // Dodanie prostego logowania przy każdym renderowaniu
+    console.log("[MAIN][12] HabitTimer rendering");
 
     // Pokaż ekran ładowania, dopóki dane nie zostaną pobrane z workera
     if (!timerStateRef.current || !settingsRef.current) {
