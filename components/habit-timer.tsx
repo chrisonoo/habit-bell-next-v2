@@ -23,25 +23,16 @@ interface TimerSettings {
 }
 
 export function HabitTimer() {
-    // Referencja do przechowywania stanu timera z workera
-    const timerStateRef = useRef<TimerState>({
-        sessionTimeLeft: 0,
-        intervalTimeLeft: 0,
-        isRunning: false,
-    });
+    // Referencja do przechowywania stanu timera z workera - bez wartości domyślnych
+    const timerStateRef = useRef<TimerState | null>(null);
 
-    // Referencja do przechowywania ustawień timera z workera
-    const settingsRef = useRef<TimerSettings>({
-        sessionDuration: 30 * 60, // 30 minut w sekundach
-        intervalDuration: 5 * 60, // 5 minut w sekundach
-    });
+    // Referencja do przechowywania ustawień timera z workera - bez wartości domyślnych
+    const settingsRef = useRef<TimerSettings | null>(null);
 
     // Stan do wymuszania przerenderowania komponentu
     const [timerVersion, setTimerVersion] = useState(0);
 
-    // Stan do śledzenia inicjalizacji workera
-    const [initialized, setInitialized] = useState(false);
-
+    // Usunięto stan do śledzenia inicjalizacji workera, będziemy używać referencji
     const [isFullscreen, setIsFullscreen] = useState(false);
 
     // Stan do śledzenia, czy dialog ustawień jest otwarty
@@ -79,7 +70,7 @@ export function HabitTimer() {
                 }
 
                 console.log(
-                    `[MAIN] Received message from worker (${type}):`,
+                    `[MAIN] Received message from worker: ${type}:`,
                     payload
                 );
 
@@ -89,11 +80,6 @@ export function HabitTimer() {
 
                     // Wymuś przerenderowanie komponentu
                     setTimerVersion((prev) => prev + 1);
-
-                    // Oznacz jako zainicjalizowany po pierwszej aktualizacji
-                    if (!initialized) {
-                        setInitialized(true);
-                    }
                 } else if (type === "SETTINGS_UPDATE") {
                     // Aktualizuj referencję ustawień timera
                     settingsRef.current = payload;
@@ -112,9 +98,10 @@ export function HabitTimer() {
 
     // Reset timer to initial state
     const resetTimer = useCallback(() => {
+        //console.log("[MAIN] resetTimer called, stack:", new Error().stack);
+
         if (workerRef.current) {
             console.log("[MAIN] Sending RESET to worker");
-            // Wysyłamy tylko komendę RESET bez dodatkowych danych
             workerRef.current.postMessage({ type: "RESET" });
         }
     }, []);
@@ -153,7 +140,7 @@ export function HabitTimer() {
 
     // Toggle timer running state
     const toggleTimer = useCallback(() => {
-        if (!workerRef.current) return;
+        if (!workerRef.current || !timerStateRef.current) return;
 
         const command = timerStateRef.current.isRunning ? "PAUSE" : "START";
         console.log(`[MAIN] Sending ${command} to worker`);
@@ -199,8 +186,8 @@ export function HabitTimer() {
         console.log("[MAIN] Timer state updated in UI");
     }, [timerVersion]); // Reaguj na zmiany timerVersion
 
-    // Pokaż ekran ładowania, dopóki worker nie zostanie zainicjalizowany
-    if (!initialized) {
+    // Pokaż ekran ładowania, dopóki dane nie zostaną pobrane z workera
+    if (!timerStateRef.current || !settingsRef.current) {
         return (
             <div className="flex items-center justify-center min-h-screen">
                 <div className="text-2xl">Initializing timer...</div>
@@ -279,7 +266,7 @@ export function HabitTimer() {
             {/* Timer Controls (Center Bottom) */}
             <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
                 <TimerControls
-                    isRunning={timerStateRef.current.isRunning}
+                    isRunning={timerStateRef.current?.isRunning || false}
                     onToggle={toggleTimer}
                 />
             </div>

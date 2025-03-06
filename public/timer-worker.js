@@ -8,23 +8,25 @@ let sessionDuration = 30 * 60; // Domyślna wartość
 
 // Funkcja do wysyłania logów do głównego wątku
 function workerLog(...args) {
-    const message = args
-        .map((arg) =>
-            typeof arg === "object" ? JSON.stringify(arg) : String(arg)
-        )
-        .join(" ");
+    // const message = args
+    //     .map((arg) =>
+    //         typeof arg === "object" ? JSON.stringify(arg) : String(arg)
+    //     )
+    //     .join(" ");
 
     self.postMessage({
         type: "LOG",
-        payload: message,
+        payload: args,
     });
 
     // Zachowaj również standardowe logowanie w konsoli workera
-    console.log(...args);
+    //console.log(...args);
 }
 
 // Funkcja do wysyłania aktualizacji stanu do głównego wątku
 function sendStateUpdate(reason) {
+    workerLog(`[WORKER] Sent update: ${reason}`, );
+
     self.postMessage({
         type: "UPDATE",
         payload: {
@@ -33,8 +35,6 @@ function sendStateUpdate(reason) {
             isRunning,
         },
     });
-
-    workerLog(`[WORKER] Sent update (${reason})`);
 }
 
 // Funkcja do wysyłania aktualizacji ustawień do głównego wątku
@@ -47,13 +47,13 @@ function sendSettingsUpdate(reason) {
         },
     });
 
-    workerLog(`[WORKER] Sent settings update (${reason})`);
+    workerLog(`[WORKER] Sent settings update: ${reason}`);
 }
 
 // Obsługa wiadomości od głównego wątku
 self.onmessage = (e) => {
     const { type, payload } = e.data;
-    workerLog(`[WORKER] Received message: ${type}`);
+    workerLog(`[WORKER] Received message from MAIN: ${type}`);
 
     switch (type) {
         case "START":
@@ -73,7 +73,7 @@ self.onmessage = (e) => {
             isRunning = false;
             sessionTimeLeft = sessionDuration;
             intervalTimeLeft = intervalDuration;
-            sendStateUpdate("RESET command");
+            sendStateUpdate("RESET to INITIAL values");
             break;
 
         case "UPDATE_SETTINGS":
