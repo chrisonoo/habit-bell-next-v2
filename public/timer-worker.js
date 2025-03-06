@@ -1,10 +1,17 @@
 // Zmienne do przechowywania stanu timera
-let isRunning = false;
 let sessionTimeLeft = 0;
 let intervalTimeLeft = 0;
-let timerId = null;
 let intervalDuration = 5 * 60; // Domyślna wartość
 let sessionDuration = 30 * 60; // Domyślna wartość
+
+// Inicjalizacja zmiennych śledzących czas
+let startTime = null;
+let isRunning = false;
+let timerId = null;
+let totalActiveTime = 0;
+let totalPausedTime = 0;
+let totalTimeCorrection = 0;
+let timeCorrection = 0;
 
 // Funkcja do wysyłania logów do głównego wątku
 function workerLog(...args) {
@@ -70,8 +77,7 @@ self.onmessage = (e) => {
             isRunning = false;
             sessionTimeLeft = sessionDuration;
             intervalTimeLeft = intervalDuration;
-            clearInterval(timerId);
-            timerId = null;
+            stopReset();
             sendStateUpdate("RESET to INITIAL values [06]");
             break;
 
@@ -103,14 +109,10 @@ self.onmessage = (e) => {
 function startTimer() {
     workerLog("[WORKER][11] Starting timer");
 
-    // Inicjalizacja zmiennych śledzących czas
-    const startTime = Date.now();
-    let totalActiveTime = 0;
-    let totalPausedTime = 0;
-    let totalTimeCorrection = 0;
-    let timeCorrection = 0;
+    startTime = Date.now();
+    isRunning = true;
 
-    timerId = setInterval(() => {
+    function tick() {
         // Uaktualnij czas pauzy
         if (!isRunning) {
             totalPausedTime += 1000;
@@ -120,17 +122,8 @@ function startTimer() {
                 } sec.`
             );
 
-            // Oblicz korektę czasu
-            timeCorrection =
-                Date.now() -
-                (startTime + totalActiveTime + totalPausedTime) -
-                totalTimeCorrection;
-            workerLog(`[WORKER][13] Time correction: ${timeCorrection} ms`);
-
-            totalTimeCorrection += timeCorrection;
-            workerLog(
-                `[WORKER][14] Total time correction: ${totalTimeCorrection} ms`
-            );
+            calculateTimeCorrection();
+            scheduleNextTick(tick);
 
             return;
         }
@@ -138,17 +131,7 @@ function startTimer() {
         // Uaktualnij czas aktywny
         totalActiveTime += 1000;
 
-        // Oblicz korektę czasu
-        timeCorrection =
-            Date.now() -
-            (startTime + totalActiveTime + totalPausedTime) -
-            totalTimeCorrection;
-        workerLog(`[WORKER][13] Time correction: ${timeCorrection} ms`);
-
-        totalTimeCorrection += timeCorrection;
-        workerLog(
-            `[WORKER][14] Total time correction: ${totalTimeCorrection} ms`
-        );
+        calculateTimeCorrection();
 
         // Aktualizuj czas sesji
         const totalActiveSeconds = totalActiveTime / 1000;
@@ -161,12 +144,60 @@ function startTimer() {
         // Sprawdź, czy sesja się zakończyła
         if (sessionTimeLeft <= 0) {
             isRunning = false;
-            workerLog("[WORKER][15] Session ended, stopping timer");
+            workerLog("[WORKER][13] Session ended, stopping timer");
         }
 
         // Wyślij zaktualizowany stan do głównego wątku
-        sendStateUpdate("tick [16]");
-    }, 1000 - timeCorrection);
+        sendStateUpdate("tick [14]");
+
+        scheduleNextTick(tick);
+    }
+    scheduleNextTick(tick);
+}
+
+function stopReset() {
+    if (timerId) {
+        clearTimeout(timerId); // Anuluj zaplanowany tick
+        timerId = null;
+    }
+
+    startTime = null;
+    isRunning = false;
+    totalActiveTime = 0;
+    totalPausedTime = 0;
+    totalTimeCorrection = 0;
+    timeCorrection = 0;
+
+    workerLog("[WORKER][15] Timer stopped");
+}
+
+function calculateTimeCorrection() {
+    if (!startTime) return;
+
+    timeCorrection =
+        Date.now() -
+        (startTime + totalActiveTime + totalPausedTime) -
+        totalTimeCorrection;
+
+    totalTimeCorrection += timeCorrection;
+    workerLog(
+        `[WORKER][16] C: ${timeCorrection} ms, Total c: ${totalTimeCorrection}, Average c: ${calculateAverageTimeCorrection()} | Active: ${
+            totalActiveTime / 1000
+        } | Paused: ${totalPausedTime / 1000}}`
+    );
+}
+
+function calculateAverageTimeCorrection() {
+    let totalTicks = totalActiveTime / 1000 + totalPausedTime / 1000;
+    if (totalTicks === 0) return 0;
+    return Math.floor(totalTimeCorrection / totalTicks);
+}
+
+function scheduleNextTick(tick) {
+    timerId = setTimeout(
+        tick,
+        Math.max(50, 1000 - calculateAverageTimeCorrection())
+    );
 }
 
 // Inicjalizacja workera
