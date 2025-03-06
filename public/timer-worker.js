@@ -70,6 +70,8 @@ self.onmessage = (e) => {
             isRunning = false;
             sessionTimeLeft = sessionDuration;
             intervalTimeLeft = intervalDuration;
+            clearInterval(timerId);
+            timerId = null;
             sendStateUpdate("RESET to INITIAL values [06]");
             break;
 
@@ -97,83 +99,78 @@ self.onmessage = (e) => {
 };
 
 // Funkcja rozpoczynająca odliczanie
+// Dokładność 1 sekunda
 function startTimer() {
     workerLog("[WORKER][11] Starting timer");
 
-    // Używamy Date.now() do dokładnego śledzenia czasu
-    let lastTickTime = Date.now();
-    // Dodajemy zmienne do śledzenia czasu absolutnego
-    let sessionStartTime = Date.now();
-    let sessionElapsedBeforePause = 0;
-    let intervalStartTime = Date.now();
-    let intervalElapsedBeforePause = 0;
+    // Inicjalizacja zmiennych śledzących czas
+    const startTime = Date.now();
+    let totalActiveTime = 0;
+    let totalPausedTime = 0;
+    let totalTimeCorrection = 0;
+    let timeCorrection = 0;
 
     timerId = setInterval(() => {
-        // Jeśli timer jest zatrzymany, aktualizujemy punkt odniesienia
-        // aby nie liczyć czasu spędzonego na pauzie
+        // Uaktualnij czas pauzy
         if (!isRunning) {
-            // Zapisujemy ile czasu upłynęło przed pauzą
-            if (lastTickTime !== Date.now()) {
-                sessionElapsedBeforePause = sessionDuration - sessionTimeLeft;
-                intervalElapsedBeforePause =
-                    intervalDuration - intervalTimeLeft;
-            }
-            lastTickTime = Date.now();
-            workerLog("[WORKER][12] Timer paused, skipping tick");
+            totalPausedTime += 1000;
+            workerLog(
+                `[WORKER][12] Timer paused, total pause: ${
+                    totalPausedTime / 1000
+                } sec.`
+            );
+
+            // Oblicz korektę czasu
+            timeCorrection =
+                Date.now() -
+                (startTime + totalActiveTime + totalPausedTime) -
+                totalTimeCorrection;
+            workerLog(`[WORKER][13] Time correction: ${timeCorrection} ms`);
+
+            totalTimeCorrection += timeCorrection;
+            workerLog(
+                `[WORKER][14] Total time correction: ${totalTimeCorrection} ms`
+            );
+
             return;
         }
 
-        const now = Date.now();
+        // Uaktualnij czas aktywny
+        totalActiveTime += 1000;
 
-        // Przy wznowieniu po pauzie, resetujemy punkty odniesienia
-        if (lastTickTime === now) {
-            sessionStartTime = now - sessionElapsedBeforePause * 1000;
-            intervalStartTime = now - intervalElapsedBeforePause * 1000;
-        }
+        // Oblicz korektę czasu
+        timeCorrection =
+            Date.now() -
+            (startTime + totalActiveTime + totalPausedTime) -
+            totalTimeCorrection;
+        workerLog(`[WORKER][13] Time correction: ${timeCorrection} ms`);
 
-        const deltaSeconds = Math.floor((now - lastTickTime) / 1000);
-        if (deltaSeconds <= 0) return;
-
-        lastTickTime = now;
-
-        // Obliczamy czas sesji na podstawie absolutnego czasu, z korektą
-        const sessionElapsedSeconds = Math.floor(
-            (now - sessionStartTime) / 1000
-        );
-        sessionTimeLeft = Math.max(0, sessionDuration - sessionElapsedSeconds);
-
-        // Obliczamy czas interwału na podstawie absolutnego czasu, z korektą
-        let intervalElapsedSeconds = Math.floor(
-            (now - intervalStartTime) / 1000
+        totalTimeCorrection += timeCorrection;
+        workerLog(
+            `[WORKER][14] Total time correction: ${totalTimeCorrection} ms`
         );
 
-        // Sprawdzamy, czy interwał powinien się zresetować
-        if (intervalElapsedSeconds >= intervalDuration) {
-            // Resetujemy interwał, zachowując dokładność
-            const intervalCycles = Math.floor(
-                intervalElapsedSeconds / intervalDuration
-            );
-            intervalStartTime += intervalCycles * intervalDuration * 1000;
-            intervalElapsedSeconds = Math.floor(
-                (now - intervalStartTime) / 1000
-            );
-        }
+        // Aktualizuj czas sesji
+        const totalActiveSeconds = totalActiveTime / 1000;
+        sessionTimeLeft = sessionDuration - totalActiveSeconds;
 
+        // Oblicz czas interwału (z automatycznym resetowaniem)
+        const intervalElapsedSeconds = totalActiveSeconds % intervalDuration;
         intervalTimeLeft = intervalDuration - intervalElapsedSeconds;
 
         // Sprawdź, czy sesja się zakończyła
         if (sessionTimeLeft <= 0) {
             isRunning = false;
-            workerLog("[WORKER][13] Session ended, stopping timer");
+            workerLog("[WORKER][15] Session ended, stopping timer");
         }
 
         // Wyślij zaktualizowany stan do głównego wątku
-        sendStateUpdate("tick [14]");
-    }, 1000);
+        sendStateUpdate("tick [16]");
+    }, 1000 - timeCorrection);
 }
 
 // Inicjalizacja workera
-workerLog("[WORKER][14] Worker initialized with settings:", {
+workerLog("[WORKER][17] Worker initialized with settings:", {
     sessionDuration,
     intervalDuration,
 });
