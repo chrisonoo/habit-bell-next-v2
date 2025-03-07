@@ -246,8 +246,8 @@ export function HabitTimer() {
             </Button>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col items-center justify-center w-full">
-                <div className="flex flex-col items-center justify-center scale-50 lg:scale-100">
+            <div className="flex-1 flex flex-col items-center justify-center w-full mt-16 mb-8">
+                <div className="flex flex-col items-center justify-center">
                     <TimerDisplay
                         minutes={intervalTime.minutes}
                         seconds={intervalTime.seconds}
@@ -258,12 +258,12 @@ export function HabitTimer() {
                         seconds={sessionTime.seconds}
                         size="small"
                         color="text-primary"
-                        className="mt-4"
+                        className="lg:mt-4"
                     />
                 </div>
 
                 {/* Timer Controls (Center Bottom) */}
-                <div className="">
+                <div className="mt-6 lg:mt-16">
                     <TimerControls
                         isRunning={timerStateRef.current?.isRunning || false}
                         onToggle={toggleTimer}
