@@ -180,6 +180,7 @@ function calculateTimeCorrection() {
         totalTimeCorrection;
 
     totalTimeCorrection += timeCorrection;
+
     workerLog(
         `[WORKER][16] C: ${timeCorrection} ms, Total c: ${totalTimeCorrection}, Average c: ${calculateAverageTimeCorrection()} | Active: ${
             totalActiveTime / 1000
@@ -189,8 +190,7 @@ function calculateTimeCorrection() {
 
 function calculateAverageTimeCorrection() {
     let totalTicks = totalActiveTime / 1000 + totalPausedTime / 1000;
-    if (totalTicks === 0) return 0;
-    return Math.floor(totalTimeCorrection / totalTicks);
+    return totalTicks > 0 ? Math.floor(totalTimeCorrection / totalTicks) : 0;
 }
 
 function scheduleNextTick(tick) {
