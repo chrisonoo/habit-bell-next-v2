@@ -224,11 +224,22 @@ export function HabitTimer() {
             <Button
                 variant="ghost"
                 size="icon"
-                className="absolute top-4 right-4 z-10"
+                className="absolute top-4 right-4 z-10 h-14 w-14"
                 onClick={resetTimer}
             >
-                <RotateCcw className="h-6 w-6" />
+                <RotateCcw className="!h-8 !w-8" />
                 <span className="sr-only">Reset timer</span>
+            </Button>
+
+            {/* Fullscreen Button (Bottom Right) */}
+            <Button
+                variant="ghost"
+                size="icon"
+                className="absolute bottom-4 right-4 z-10 h-14 w-14"
+                onClick={toggleFullscreen}
+            >
+                <Maximize className="!h-8 !w-8" />
+                <span className="sr-only">Toggle fullscreen</span>
             </Button>
 
             {/* Main Content */}
@@ -252,17 +263,6 @@ export function HabitTimer() {
                     />
                 </div>
             </div>
-
-            {/* Fullscreen Button (Bottom Right) */}
-            <Button
-                variant="ghost"
-                size="icon"
-                className="absolute bottom-4 right-4 z-10"
-                onClick={toggleFullscreen}
-            >
-                <Maximize className="h-6 w-6" />
-                <span className="sr-only">Toggle fullscreen</span>
-            </Button>
 
             {/* Timer Controls (Center Bottom) */}
             <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
