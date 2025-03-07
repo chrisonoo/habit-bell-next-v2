@@ -68,13 +68,10 @@ export function TimerSettingsDialog({
                     <span className="sr-only">Settings</span>
                 </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-[320px]">
                 <DialogHeader>
                     <DialogTitle>Timer Settings</DialogTitle>
-                    <DialogDescription>
-                        Configure your session and interval durations for the
-                        Habit Bell timer.
-                    </DialogDescription>
+                    <DialogDescription></DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
