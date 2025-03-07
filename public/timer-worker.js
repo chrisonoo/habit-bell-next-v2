@@ -122,16 +122,13 @@ function startTimer() {
                 } sec.`
             );
 
-            calculateTimeCorrection();
-            scheduleNextTick(tick);
+            scheduleNextTick(tick, calculateTimeCorrection());
 
             return;
         }
 
         // Uaktualnij czas aktywny
         totalActiveTime += 1000;
-
-        calculateTimeCorrection();
 
         // Aktualizuj czas sesji
         const totalActiveSeconds = totalActiveTime / 1000;
@@ -150,9 +147,9 @@ function startTimer() {
         // Wyślij zaktualizowany stan do głównego wątku
         sendStateUpdate("tick [14]");
 
-        scheduleNextTick(tick);
+        scheduleNextTick(tick, calculateTimeCorrection());
     }
-    scheduleNextTick(tick);
+    scheduleNextTick(tick, 1000);
 }
 
 function stopReset() {
@@ -177,27 +174,26 @@ function calculateTimeCorrection() {
     timeCorrection =
         Date.now() -
         (startTime + totalActiveTime + totalPausedTime) -
-        totalTimeCorrection;
+        totalTimeCorrection +
+        1000;
 
     totalTimeCorrection += timeCorrection;
 
+    let totalTicks = totalActiveTime / 1000 + totalPausedTime / 1000;
+    let averageTimeCorrection =
+        totalTicks > 0 ? Math.floor(totalTimeCorrection / totalTicks) : 0;
+
     workerLog(
-        `[WORKER][16] C: ${timeCorrection} ms, Total c: ${totalTimeCorrection}, Average c: ${calculateAverageTimeCorrection()} | Active: ${
+        `[WORKER][16] C: ${timeCorrection} ms, Total c: ${totalTimeCorrection}, Average c: ${averageTimeCorrection} | Active: ${
             totalActiveTime / 1000
         } | Paused: ${totalPausedTime / 1000}}`
     );
+
+    return timeCorrection;
 }
 
-function calculateAverageTimeCorrection() {
-    let totalTicks = totalActiveTime / 1000 + totalPausedTime / 1000;
-    return totalTicks > 0 ? Math.floor(totalTimeCorrection / totalTicks) : 0;
-}
-
-function scheduleNextTick(tick) {
-    timerId = setTimeout(
-        tick,
-        Math.max(50, 1000 - calculateAverageTimeCorrection())
-    );
+function scheduleNextTick(tick, timeCorrection) {
+    timerId = setTimeout(tick, Math.max(50, 1000 - timeCorrection));
 }
 
 // Inicjalizacja workera
