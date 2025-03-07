@@ -209,7 +209,10 @@ export function HabitTimer() {
     );
 
     return (
-        <div className="relative flex flex-col items-center justify-between min-h-screen p-4 overflow-hidden">
+        <div className="relative flex flex-col items-center justify-between min-h-screen overflow-hidden">
+            {/* Logo */}
+            <BellLogo />
+
             {/* Menu/Settings Button (Top Left) */}
             <TimerSettingsDialog
                 sessionDuration={sessionDurationMinutes}
@@ -224,10 +227,10 @@ export function HabitTimer() {
             <Button
                 variant="ghost"
                 size="icon"
-                className="absolute top-4 right-4 z-10 h-14 w-14"
+                className="absolute top-4 right-4 z-10 h-10 w-10 lg:h-14 lg:w-14"
                 onClick={resetTimer}
             >
-                <RotateCcw className="!h-8 !w-8" />
+                <RotateCcw className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
                 <span className="sr-only">Reset timer</span>
             </Button>
 
@@ -235,41 +238,37 @@ export function HabitTimer() {
             <Button
                 variant="ghost"
                 size="icon"
-                className="absolute bottom-4 right-4 z-10 h-14 w-14"
+                className="absolute bottom-4 right-4 z-10 h-10 w-10 lg:h-14 lg:w-14"
                 onClick={toggleFullscreen}
             >
-                <Maximize className="!h-8 !w-8" />
+                <Maximize className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
                 <span className="sr-only">Toggle fullscreen</span>
             </Button>
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col items-center justify-center w-full">
-                <BellLogo />
-
-                <div className="flex-1 flex items-center justify-center">
+                <div className="flex flex-col items-center justify-center scale-50 lg:scale-100">
                     <TimerDisplay
                         minutes={intervalTime.minutes}
                         seconds={intervalTime.seconds}
                         size="large"
                     />
-                </div>
-
-                <div className="mb-32">
                     <TimerDisplay
                         minutes={sessionTime.minutes}
                         seconds={sessionTime.seconds}
                         size="small"
                         color="text-primary"
+                        className="mt-4"
                     />
                 </div>
-            </div>
 
-            {/* Timer Controls (Center Bottom) */}
-            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-                <TimerControls
-                    isRunning={timerStateRef.current?.isRunning || false}
-                    onToggle={toggleTimer}
-                />
+                {/* Timer Controls (Center Bottom) */}
+                <div className="">
+                    <TimerControls
+                        isRunning={timerStateRef.current?.isRunning || false}
+                        onToggle={toggleTimer}
+                    />
+                </div>
             </div>
         </div>
     );
