@@ -27,7 +27,6 @@
         "**/*.ts",
         "**/*.tsx",
         ".next/types/**/*.ts",
-        "public/timer-worker.js"
     ],
     "exclude": ["node_modules"]
 }

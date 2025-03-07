@@ -1,8 +1,8 @@
 // Zmienne do przechowywania stanu timera
 let sessionTimeLeft = 0;
 let intervalTimeLeft = 0;
-let intervalDuration = 5 * 60; // Domyślna wartość
-let sessionDuration = 30 * 60; // Domyślna wartość
+let intervalDuration = 0.5 * 60; // Domyślna wartość
+let sessionDuration = 1 * 60; // Domyślna wartość
 
 // Inicjalizacja zmiennych śledzących czas
 let startTime = 0;
@@ -110,6 +110,7 @@ function startTimer() {
 
     startTime = Date.now();
     isRunning = true;
+    totalActiveTime = 1000;
 
     function tick() {
         let expectedTime = startTime + totalActiveTime + totalPausedTime;
@@ -117,14 +118,14 @@ function startTimer() {
         // Uaktualnij czas pauzy
         if (!isRunning) {
             totalPausedTime += 1000;
-            workerLog(
-                `[WORKER][12] Timer paused, total pause: ${
-                    totalPausedTime / 1000
-                } sec.`
-            );
-
             scheduleNextTick(tick, calculateTimeCorrection(expectedTime));
+            return;
+        }
 
+        // Sprawdź, czy sesja się zakończyła
+        if (sessionTimeLeft === 0) {
+            isRunning = false;
+            workerLog("[WORKER][12] Session ended, timer stopped");
             return;
         }
 
@@ -132,25 +133,21 @@ function startTimer() {
         totalActiveTime += 1000;
 
         // Aktualizuj czas sesji
-        const totalActiveSeconds = totalActiveTime / 1000;
-        sessionTimeLeft = sessionDuration - totalActiveSeconds;
+        sessionTimeLeft -= 1;
 
         // Oblicz czas interwału (z automatycznym resetowaniem)
-        const intervalElapsedSeconds = totalActiveSeconds % intervalDuration;
-        intervalTimeLeft = intervalDuration - intervalElapsedSeconds;
-
-        // Sprawdź, czy sesja się zakończyła
-        if (sessionTimeLeft <= 0) {
-            isRunning = false;
-            workerLog("[WORKER][13] Session ended, stopping timer");
-        }
+        intervalTimeLeft === 1
+            ? sessionTimeLeft === 0
+                ? (intervalTimeLeft -= 1)
+                : (intervalTimeLeft = intervalDuration)
+            : (intervalTimeLeft -= 1);
 
         // Wyślij zaktualizowany stan do głównego wątku
-        sendStateUpdate("tick [14]");
+        sendStateUpdate("tick [13]");
 
         scheduleNextTick(tick, calculateTimeCorrection(expectedTime));
     }
-    scheduleNextTick(tick, 1000);
+    scheduleNextTick(tick, 0);
 }
 
 function stopReset() {
@@ -164,8 +161,11 @@ function stopReset() {
     totalActiveTime = 0;
     totalPausedTime = 0;
     totalTimeCorrection = 0;
+    sessionTimeLeft = sessionDuration;
+    intervalTimeLeft = intervalDuration;
 
-    workerLog("[WORKER][15] Timer stopped");
+    workerLog("[WORKER][14] Timer stopped and reset to initial values");
+    sendStateUpdate("Prepare for next session");
 }
 
 function calculateTimeCorrection(expectedTime) {
@@ -178,7 +178,7 @@ function calculateTimeCorrection(expectedTime) {
         totalTicks > 0 ? Math.floor(totalTimeCorrection / totalTicks) : 0;
 
     workerLog(
-        `[WORKER][16] C: ${timeCorrection} ms, Total c: ${totalTimeCorrection}, Average c: ${averageTimeCorrection} | Active: ${
+        `[WORKER][15] C: ${timeCorrection} ms, Total c: ${totalTimeCorrection}, Average c: ${averageTimeCorrection} | Active: ${
             totalActiveTime / 1000
         } | Paused: ${totalPausedTime / 1000}}`
     );
@@ -191,7 +191,7 @@ function scheduleNextTick(tick, timeCorrection) {
 }
 
 // Inicjalizacja workera
-workerLog("[WORKER][17] Worker initialized with settings:", {
+workerLog("[WORKER][16] Worker initialized with settings:", {
     sessionDuration,
     intervalDuration,
 });

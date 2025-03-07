@@ -60,7 +60,7 @@ export function HabitTimer() {
             }
 
             // Create new worker
-            workerRef.current = new Worker("/timer-worker.js");
+            workerRef.current = new Worker("/workers/timer-worker.js");
             workerInitializedRef.current = true;
 
             // Set up message handler
