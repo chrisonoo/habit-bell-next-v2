@@ -5,13 +5,12 @@ let intervalDuration = 5 * 60; // Domyślna wartość
 let sessionDuration = 30 * 60; // Domyślna wartość
 
 // Inicjalizacja zmiennych śledzących czas
-let startTime = null;
+let startTime = 0;
 let isRunning = false;
 let timerId = null;
 let totalActiveTime = 0;
 let totalPausedTime = 0;
 let totalTimeCorrection = 0;
-let timeCorrection = 0;
 
 // Funkcja do wysyłania logów do głównego wątku
 function workerLog(...args) {
@@ -113,6 +112,8 @@ function startTimer() {
     isRunning = true;
 
     function tick() {
+        let expectedTime = startTime + totalActiveTime + totalPausedTime;
+
         // Uaktualnij czas pauzy
         if (!isRunning) {
             totalPausedTime += 1000;
@@ -122,7 +123,7 @@ function startTimer() {
                 } sec.`
             );
 
-            scheduleNextTick(tick, calculateTimeCorrection());
+            scheduleNextTick(tick, calculateTimeCorrection(expectedTime));
 
             return;
         }
@@ -147,7 +148,7 @@ function startTimer() {
         // Wyślij zaktualizowany stan do głównego wątku
         sendStateUpdate("tick [14]");
 
-        scheduleNextTick(tick, calculateTimeCorrection());
+        scheduleNextTick(tick, calculateTimeCorrection(expectedTime));
     }
     scheduleNextTick(tick, 1000);
 }
@@ -158,28 +159,21 @@ function stopReset() {
         timerId = null;
     }
 
-    startTime = null;
+    startTime = 0;
     isRunning = false;
     totalActiveTime = 0;
     totalPausedTime = 0;
     totalTimeCorrection = 0;
-    timeCorrection = 0;
 
     workerLog("[WORKER][15] Timer stopped");
 }
 
-function calculateTimeCorrection() {
-    if (!startTime) return;
-
-    timeCorrection =
-        Date.now() -
-        (startTime + totalActiveTime + totalPausedTime) -
-        totalTimeCorrection +
-        1000;
+function calculateTimeCorrection(expectedTime) {
+    let timeCorrection = Date.now() - expectedTime;
 
     totalTimeCorrection += timeCorrection;
 
-    let totalTicks = totalActiveTime / 1000 + totalPausedTime / 1000;
+    let totalTicks = (totalActiveTime + totalPausedTime) / 1000;
     let averageTimeCorrection =
         totalTicks > 0 ? Math.floor(totalTimeCorrection / totalTicks) : 0;
 
