@@ -6,7 +6,7 @@ import { BellLogo } from "@/components/bell-logo";
 import { TimerControls } from "@/components/timer-controls";
 import { TimerSettingsDialog } from "@/components/timer-settings-dialog";
 import { formatTime } from "@/lib/utils";
-import { RotateCcw, Maximize } from "lucide-react";
+import { TimerReset, RotateCcw, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Interfejs dla stanu timera zarządzanego przez workera
@@ -227,10 +227,10 @@ export function HabitTimer() {
             <Button
                 variant="ghost"
                 size="icon"
-                className="absolute top-4 right-4 z-10 h-10 w-10 lg:h-14 lg:w-14"
+                className="absolute top-4 right-12 lg:right-16 z-10 h-10 w-10 lg:h-14 lg:w-14"
                 onClick={resetTimer}
             >
-                <RotateCcw className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
+                <TimerReset className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
                 <span className="sr-only">Reset timer</span>
             </Button>
 
