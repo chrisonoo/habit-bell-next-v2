@@ -34,20 +34,17 @@ export function HabitTimer() {
     // Referencja do przechowywania ustawień timera z workera - bez wartości domyślnych
     const settingsRef = useRef<TimerSettings | null>(null);
 
-    // Usunięto stan do śledzenia inicjalizacji workera, będziemy używać referencji
-    const [isFullscreen, setIsFullscreen] = useState(false);
+    // Web Worker reference
+    const workerRef = useRef<Worker | null>(null);
+
+    // Flag to track if worker is initialized
+    const workerInitializedRef = useRef(false);
 
     // Stan do śledzenia, czy dialog ustawień jest otwarty
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     // Dodanie funkcji forceUpdate
     const forceUpdate = useReducer((x) => x + 1, 0)[1];
-
-    // Web Worker reference
-    const workerRef = useRef<Worker | null>(null);
-
-    // Flag to track if worker is initialized
-    const workerInitializedRef = useRef(false);
 
     // Initialize Web Worker
     useEffect(() => {
@@ -165,25 +162,6 @@ export function HabitTimer() {
                 document.exitFullscreen();
             }
         }
-    }, []);
-
-    // Update fullscreen state
-    useEffect(() => {
-        const handleFullscreenChange = () => {
-            const newIsFullscreen = !!document.fullscreenElement;
-            console.log(
-                `[MAIN][11] Fullscreen state changed: ${newIsFullscreen}`
-            );
-            setIsFullscreen(newIsFullscreen);
-        };
-
-        document.addEventListener("fullscreenchange", handleFullscreenChange);
-        return () => {
-            document.removeEventListener(
-                "fullscreenchange",
-                handleFullscreenChange
-            );
-        };
     }, []);
 
     // Dodanie prostego logowania przy każdym renderowaniu
