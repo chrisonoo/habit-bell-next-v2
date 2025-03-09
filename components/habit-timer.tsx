@@ -27,6 +27,12 @@ interface TimerSettings {
     intervalDuration: number;
 }
 
+// Interfejs dla wartości czasu (minuty i sekundy)
+interface TimeValue {
+    minutes: number;
+    seconds: number;
+}
+
 export function HabitTimer() {
     // Referencja do przechowywania stanu timera z workera - bez wartości domyślnych
     const timerStateRef = useRef<TimerState | null>(null);
@@ -108,18 +114,24 @@ export function HabitTimer() {
 
     // Save settings
     const saveSettings = useCallback(
-        (newSessionDuration: number, newIntervalDuration: number) => {
+        (newSessionDuration: TimeValue, newIntervalDuration: TimeValue) => {
             console.log(
-                `[MAIN][05] Saving new settings: session=${newSessionDuration}, interval=${newIntervalDuration}`
+                `[MAIN][05] Saving new settings: session=${newSessionDuration.minutes}:${newSessionDuration.seconds}, interval=${newIntervalDuration.minutes}:${newIntervalDuration.seconds}`
             );
 
-            // Send to worker (convert minutes to seconds)
+            // Konwertuj minuty i sekundy na sekundy
+            const sessionDurationInSeconds =
+                newSessionDuration.minutes * 60 + newSessionDuration.seconds;
+            const intervalDurationInSeconds =
+                newIntervalDuration.minutes * 60 + newIntervalDuration.seconds;
+
+            // Send to worker
             if (workerRef.current) {
                 workerRef.current.postMessage({
                     type: "UPDATE_SETTINGS",
                     payload: {
-                        sessionDuration: newSessionDuration * 60,
-                        intervalDuration: newIntervalDuration * 60,
+                        sessionDuration: sessionDurationInSeconds,
+                        intervalDuration: intervalDurationInSeconds,
                     },
                 });
             }
@@ -180,13 +192,11 @@ export function HabitTimer() {
     const sessionTime = formatTime(timerStateRef.current.sessionTimeLeft);
     const intervalTime = formatTime(timerStateRef.current.intervalTimeLeft);
 
-    // Konwertuj sekundy na minuty dla ustawień
-    const sessionDurationMinutes = formatTime(
-        settingsRef.current.sessionDuration
-    ).minutes;
-    const intervalDurationMinutes = formatTime(
+    // Formatuj czas ustawień
+    const sessionDurationTime = formatTime(settingsRef.current.sessionDuration);
+    const intervalDurationTime = formatTime(
         settingsRef.current.intervalDuration
-    ).minutes;
+    );
 
     return (
         <div className="relative flex flex-col items-center justify-between min-h-screen overflow-hidden">
@@ -237,8 +247,8 @@ export function HabitTimer() {
 
                 {/* Menu/Settings Button (Top Left) */}
                 <TimerSettingsDialog
-                    sessionDuration={sessionDurationMinutes}
-                    intervalDuration={intervalDurationMinutes}
+                    sessionDuration={sessionDurationTime}
+                    intervalDuration={intervalDurationTime}
                     onSave={saveSettings}
                     isOpen={isSettingsOpen}
                     onOpenChange={setIsSettingsOpen}
