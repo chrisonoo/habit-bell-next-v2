@@ -154,7 +154,7 @@ async function saveTimerSettings(sessionDuration, intervalDuration) {
 
 /**
  * Inicjalizuje ustawienia timera
- * @returns {Promise<{sessionDuration: number, intervalDuration: number, sessionTimeLeft: number, intervalTimeLeft: number}>}
+ * @returns {Promise<{sessionDuration: number, intervalDuration: number}>}
  * Obiekt z ustawieniami timera
  */
 async function initializeTimerSettings() {
@@ -194,12 +194,10 @@ async function initializeTimerSettings() {
             await saveTimerSettings(sessionDuration, intervalDuration);
         }
 
-        // Zwróć ustawienia i początkowe wartości timera
+        // Zwróć tylko ustawienia, bez stanu timera
         return {
             sessionDuration,
             intervalDuration,
-            sessionTimeLeft: sessionDuration,
-            intervalTimeLeft: intervalDuration,
         };
     } catch (error) {
         logFunction("[STORAGE][15] Error initializing timer settings:", error);
@@ -208,8 +206,6 @@ async function initializeTimerSettings() {
         return {
             sessionDuration: DEFAULT_SESSION_DURATION,
             intervalDuration: DEFAULT_INTERVAL_DURATION,
-            sessionTimeLeft: DEFAULT_SESSION_DURATION,
-            intervalTimeLeft: DEFAULT_INTERVAL_DURATION,
         };
     }
 }
@@ -218,7 +214,7 @@ async function initializeTimerSettings() {
  * Aktualizuje ustawienia timera
  * @param {number} sessionDuration Czas trwania sesji w sekundach
  * @param {number} intervalDuration Czas trwania interwału w sekundach
- * @returns {Promise<{sessionDuration: number, intervalDuration: number, sessionTimeLeft: number, intervalTimeLeft: number}>}
+ * @returns {Promise<{sessionDuration: number, intervalDuration: number}>}
  * Obiekt z zaktualizowanymi ustawieniami timera
  */
 async function updateTimerSettings(sessionDuration, intervalDuration) {
@@ -242,12 +238,10 @@ async function updateTimerSettings(sessionDuration, intervalDuration) {
             logFunction("[STORAGE][17] Timer settings unchanged");
         }
 
-        // Zwróć zaktualizowane ustawienia i początkowe wartości timera
+        // Zwróć tylko zaktualizowane ustawienia, bez stanu timera
         return {
             sessionDuration,
             intervalDuration,
-            sessionTimeLeft: sessionDuration,
-            intervalTimeLeft: intervalDuration,
         };
     } catch (error) {
         logFunction("[STORAGE][18] Error updating timer settings:", error);
@@ -256,8 +250,6 @@ async function updateTimerSettings(sessionDuration, intervalDuration) {
         return {
             sessionDuration,
             intervalDuration,
-            sessionTimeLeft: sessionDuration,
-            intervalTimeLeft: intervalDuration,
         };
     }
 }

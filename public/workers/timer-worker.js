@@ -68,11 +68,13 @@ async function initializeWorker() {
         // Pobierz ustawienia z StorageService
         const settings = await self.StorageService.initializeTimerSettings();
 
-        // Aktualizuj zmienne workera
+        // Aktualizuj zmienne ustawień workera
         sessionDuration = settings.sessionDuration;
         intervalDuration = settings.intervalDuration;
-        sessionTimeLeft = settings.sessionTimeLeft;
-        intervalTimeLeft = settings.intervalTimeLeft;
+
+        // Inicjalizuj stan timera na podstawie ustawień
+        sessionTimeLeft = sessionDuration;
+        intervalTimeLeft = intervalDuration;
 
         // Wyślij aktualizację ustawień i stanu
         sendSettingsUpdate("Worker initialized with settings [03]");
@@ -128,11 +130,13 @@ self.onmessage = async (e) => {
                                 : intervalDuration
                         );
 
-                    // Aktualizuj zmienne workera
+                    // Aktualizuj zmienne ustawień workera
                     sessionDuration = settings.sessionDuration;
                     intervalDuration = settings.intervalDuration;
-                    sessionTimeLeft = settings.sessionTimeLeft;
-                    intervalTimeLeft = settings.intervalTimeLeft;
+
+                    // Zresetuj stan timera na podstawie nowych ustawień
+                    sessionTimeLeft = sessionDuration;
+                    intervalTimeLeft = intervalDuration;
 
                     sendStateUpdate("UPDATE_SETTINGS command [10]");
                     sendSettingsUpdate("UPDATE_SETTINGS command [11]");
