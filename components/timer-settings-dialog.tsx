@@ -9,6 +9,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
+    DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -105,6 +106,7 @@ export function TimerSettingsDialog({
             <DialogContent className="max-w-[360px]">
                 <DialogHeader>
                     <DialogTitle>Timer Settings</DialogTitle>
+                    <DialogDescription></DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-6 py-4">
                     <div className="space-y-2">
