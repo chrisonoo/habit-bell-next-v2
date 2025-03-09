@@ -34,9 +34,6 @@ export function HabitTimer() {
     // Referencja do przechowywania ustawień timera z workera - bez wartości domyślnych
     const settingsRef = useRef<TimerSettings | null>(null);
 
-    // Usunięcie timerVersion
-    // const [timerVersion, setTimerVersion] = useState(0);
-
     // Usunięto stan do śledzenia inicjalizacji workera, będziemy używać referencji
     const [isFullscreen, setIsFullscreen] = useState(false);
 
