@@ -5,7 +5,7 @@ import { TimerDisplay } from "@/components/timer-display";
 import { BellLogo } from "@/components/bell-logo";
 import { TimerControls } from "@/components/timer-controls";
 import { TimerSettingsDialog } from "@/components/timer-settings-dialog";
-import { formatTime } from "@/lib/utils";
+import { formatTime, convertSecondsToMinutes } from "@/services/time-service";
 import {
     CircleDollarSign,
     CirclePause,
@@ -181,11 +181,11 @@ export function HabitTimer() {
     const intervalTime = formatTime(timerStateRef.current.intervalTimeLeft);
 
     // Konwertuj sekundy na minuty dla ustawień
-    const sessionDurationMinutes = Math.floor(
-        settingsRef.current.sessionDuration / 60
+    const sessionDurationMinutes = convertSecondsToMinutes(
+        settingsRef.current.sessionDuration
     );
-    const intervalDurationMinutes = Math.floor(
-        settingsRef.current.intervalDuration / 60
+    const intervalDurationMinutes = convertSecondsToMinutes(
+        settingsRef.current.intervalDuration
     );
 
     return (
