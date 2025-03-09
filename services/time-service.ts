@@ -11,12 +11,3 @@ export function formatTime(timeInSeconds: number): {
     const seconds = timeInSeconds % 60;
     return { minutes, seconds };
 }
-
-/**
- * Konwertuje czas w sekundach na minuty (zaokrąglone w dół)
- * @param timeInSeconds Czas w sekundach
- * @returns Liczba minut
- */
-export function convertSecondsToMinutes(timeInSeconds: number): number {
-    return Math.floor(timeInSeconds / 60);
-}
