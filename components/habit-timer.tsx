@@ -6,7 +6,12 @@ import { BellLogo } from "@/components/bell-logo";
 import { TimerControls } from "@/components/timer-controls";
 import { TimerSettingsDialog } from "@/components/timer-settings-dialog";
 import { formatTime } from "@/lib/utils";
-import { TimerReset, RotateCcw, Maximize } from "lucide-react";
+import {
+    CircleDollarSign,
+    CirclePause,
+    TimerReset,
+    Maximize,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 // Interfejs dla stanu timera zarządzanego przez workera
@@ -210,29 +215,61 @@ export function HabitTimer() {
 
     return (
         <div className="relative flex flex-col items-center justify-between min-h-screen overflow-hidden">
+            <div className="absolute top-4 left-4 z-10 flex gap-3 items-center">
+                {/* Reset Button (Top Right) */}
+                <div className="flex gap-1 items-center">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 lg:h-14 lg:w-14"
+                        onClick={resetTimer}
+                    >
+                        <CircleDollarSign className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
+                        <span className="sr-only">Reset timer</span>
+                    </Button>
+                    <div className="text-xl lg:text-2xl">2</div>
+                </div>
+
+                {/* Reset Button (Top Right) */}
+                <div className="flex gap-1 items-center">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 lg:h-14 lg:w-14"
+                        onClick={resetTimer}
+                    >
+                        <CirclePause className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
+                        <span className="sr-only">Reset timer</span>
+                    </Button>
+                    <div className="text-xl lg:text-2xl">2</div>
+                </div>
+            </div>
+
             {/* Logo */}
             <BellLogo />
 
-            {/* Menu/Settings Button (Top Left) */}
-            <TimerSettingsDialog
-                sessionDuration={sessionDurationMinutes}
-                intervalDuration={intervalDurationMinutes}
-                onSave={saveSettings}
-                isOpen={isSettingsOpen}
-                onOpenChange={setIsSettingsOpen}
-                onOpen={handleSettingsOpen}
-            />
+            <div className="absolute top-4 right-4 z-10 flex gap-2 items-center">
+                {/* Reset Button (Top Right) */}
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 lg:h-14 lg:w-14"
+                    onClick={resetTimer}
+                >
+                    <TimerReset className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
+                    <span className="sr-only">Reset timer</span>
+                </Button>
 
-            {/* Reset Button (Top Right) */}
-            <Button
-                variant="ghost"
-                size="icon"
-                className="absolute top-4 right-12 lg:right-16 z-10 h-10 w-10 lg:h-14 lg:w-14"
-                onClick={resetTimer}
-            >
-                <TimerReset className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
-                <span className="sr-only">Reset timer</span>
-            </Button>
+                {/* Menu/Settings Button (Top Left) */}
+                <TimerSettingsDialog
+                    sessionDuration={sessionDurationMinutes}
+                    intervalDuration={intervalDurationMinutes}
+                    onSave={saveSettings}
+                    isOpen={isSettingsOpen}
+                    onOpenChange={setIsSettingsOpen}
+                    onOpen={handleSettingsOpen}
+                />
+            </div>
 
             {/* Fullscreen Button (Bottom Right) */}
             <Button

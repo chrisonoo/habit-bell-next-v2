@@ -62,7 +62,7 @@ export function TimerSettingsDialog({
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="absolute top-4 right-4 z-10 h-10 w-10 lg:h-14 lg:w-14"
+                    className="h-10 w-10 lg:h-14 lg:w-14"
                 >
                     <EllipsisVertical className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
                     <span className="sr-only">Settings</span>
