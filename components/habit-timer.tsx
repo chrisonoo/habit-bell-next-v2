@@ -11,6 +11,7 @@ import {
     CirclePause,
     TimerReset,
     Maximize,
+    Flag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -264,7 +265,7 @@ export function HabitTimer() {
         <div className="relative flex flex-col items-center justify-between min-h-screen overflow-hidden">
             {/* Top Left Controls */}
             <div className="absolute top-4 left-4 z-10 flex gap-3 items-center">
-                {/* Session Counter Button */}
+                {/* Coins Counter Button */}
                 <div className="flex gap-1 items-center">
                     <Button
                         variant="ghost"
@@ -279,6 +280,20 @@ export function HabitTimer() {
                 </div>
 
                 {/* Interval Counter Button */}
+                <div className="flex gap-1 items-center">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 lg:h-14 lg:w-14"
+                        onClick={resetTimer}
+                    >
+                        <Flag className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
+                        <span className="sr-only">Reset timer</span>
+                    </Button>
+                    <div className="text-xl lg:text-2xl">2</div>
+                </div>
+
+                {/* Pause Counter Button */}
                 <div className="flex gap-1 items-center">
                     <Button
                         variant="ghost"
