@@ -2,7 +2,7 @@
 // These constants define the database structure and default values
 const DB_NAME = "habit-bell-db"; // Name of the IndexedDB database
 const STORE_NAME = "settings"; // Name of the object store (similar to a table)
-const DB_VERSION = 1; // Database version - increment when schema changes
+const DB_VERSION = 2; // Zwiększamy wersję z 1 do 2, aby była zgodna z PauseContext
 const SETTINGS_KEY = "timer-settings"; // Key used to store/retrieve settings object
 
 // Default settings values - used when no saved settings exist
@@ -52,10 +52,24 @@ function openDatabase() {
         // This is where we define the database schema
         request.onupgradeneeded = (event) => {
             const db = event.target.result;
+
             // Create the settings store if it doesn't exist
             if (!db.objectStoreNames.contains(STORE_NAME)) {
                 db.createObjectStore(STORE_NAME);
                 logFunction("[STORAGE][02] Created settings store");
+            }
+
+            // Dodajemy obsługę store'a pauses, jeśli nie istnieje
+            if (!db.objectStoreNames.contains("pauses")) {
+                const pauseStore = db.createObjectStore("pauses", {
+                    keyPath: "id",
+                    autoIncrement: true,
+                });
+
+                // Dodaj indeks dla daty, aby ułatwić wyszukiwanie pauz z danego dnia
+                pauseStore.createIndex("date", "date", { unique: false });
+
+                logFunction("[STORAGE][02a] Created pauses store");
             }
         };
     });

@@ -131,14 +131,6 @@ export function HabitTimer() {
                         `[MAIN][DEBUG] Timer state change: wasRunning=${wasRunningRef.current}, isNowRunning=${payload.isRunning}`
                     );
 
-                    // USUWAMY TO WYWOŁANIE - to jest jedno z dwóch miejsc, gdzie registerPause() jest wywoływane
-                    // Sprawdź, czy timer został zatrzymany (pauza)
-                    // if (wasRunningRef.current && !payload.isRunning) {
-                    //   // Timer został zatrzymany - zarejestruj pauzę
-                    //   console.log("[MAIN][DEBUG] Pause detected, registering pause")
-                    //   registerPause()
-                    // }
-
                     // Aktualizuj ref śledzący stan timera
                     wasRunningRef.current = payload.isRunning;
 
@@ -152,6 +144,7 @@ export function HabitTimer() {
                 else if (type === "SETTINGS_UPDATE") {
                     // Update timer settings reference
                     settingsRef.current = payload;
+                    console.log("[MAIN][DEBUG] Settings updated:", payload);
 
                     // Force component re-render to reflect the new settings
                     forceUpdate();
@@ -236,7 +229,6 @@ export function HabitTimer() {
         console.log(`[MAIN][07] Sending ${command} to worker`);
 
         // Jeśli pauzujemy timer, zarejestruj pauzę
-        // ZOSTAWIAMY TO WYWOŁANIE - to jest drugie miejsce, gdzie registerPause() jest wywoływane
         if (command === "PAUSE") {
             console.log(
                 "[MAIN][DEBUG] Pause button clicked, registering pause"
