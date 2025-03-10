@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, useReducer } from "react";
+import { useTranslations } from "next-intl";
 import { TimerDisplay } from "@/components/timer-display";
 import { BellLogo } from "@/components/bell-logo";
 import { TimerControls } from "@/components/timer-controls";
@@ -56,6 +57,10 @@ interface TimeValue {
  * @returns {JSX.Element} The rendered component
  */
 export function HabitTimer() {
+    // Get translations
+    const t = useTranslations("timer");
+    const tAccess = useTranslations("accessibility");
+
     // Get activity registration functions from context
     const {
         registerPause,
@@ -241,7 +246,7 @@ export function HabitTimer() {
                 workerRef.current.postMessage({ type: "GET_INITIAL_SETTINGS" });
             }
         }
-    }, [registerInterval, registerSession]); // Dodajemy registerSession do zależności
+    }, [registerInterval, registerSession, registerPause]);
 
     /**
      * Reset timer to initial state
@@ -360,7 +365,7 @@ export function HabitTimer() {
     if (!timerStateRef.current || !settingsRef.current) {
         return (
             <div className="flex items-center justify-center min-h-screen">
-                <div className="text-2xl">Initializing timer...</div>
+                <div className="text-2xl">{t("initializing")}</div>
             </div>
         );
     }
@@ -401,7 +406,7 @@ export function HabitTimer() {
                     onClick={resetTimer}
                 >
                     <TimerReset className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
-                    <span className="sr-only">Reset timer</span>
+                    <span className="sr-only">{t("reset")}</span>
                 </Button>
 
                 {/* App Dropdown Menu */}
@@ -428,7 +433,7 @@ export function HabitTimer() {
                 onClick={toggleFullscreen}
             >
                 <Maximize className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
-                <span className="sr-only">Toggle fullscreen</span>
+                <span className="sr-only">{t("fullscreen")}</span>
             </Button>
 
             {/* Main Content - Timer Displays */}

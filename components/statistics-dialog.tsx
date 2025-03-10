@@ -1,12 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
     CircleDollarSign,
@@ -14,6 +26,7 @@ import {
     Flag,
     ArrowUpDown,
     X,
+    RotateCcw,
 } from "lucide-react";
 import {
     useActivityContext,
@@ -46,8 +59,12 @@ export function StatisticsDialog({
     isOpen,
     onOpenChange,
 }: StatisticsDialogProps) {
+    // Get translations
+    const t = useTranslations("statistics");
+    const tAccess = useTranslations("accessibility");
+
     // Get the getActivityStats function from the context
-    const { getActivityStats } = useActivityContext();
+    const { getActivityStats, resetActivityStats } = useActivityContext();
 
     // State for storing the statistics data
     const [stats, setStats] = useState<DailyStats[]>([]);
@@ -57,6 +74,9 @@ export function StatisticsDialog({
 
     // State for tracking loading status
     const [isLoading, setIsLoading] = useState(false);
+
+    // State for alert dialog
+    const [isAlertOpen, setIsAlertOpen] = useState(false);
 
     // Load statistics data when the dialog is opened
     useEffect(() => {
@@ -80,6 +100,26 @@ export function StatisticsDialog({
             console.error("Error loading statistics:", error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    /**
+     * Reset all activity statistics
+     */
+    const handleResetStats = async () => {
+        try {
+            setIsLoading(true);
+            const success = await resetActivityStats();
+
+            if (success) {
+                // Reload stats (should be empty now)
+                setStats([]);
+            }
+        } catch (error) {
+            console.error("Error resetting statistics:", error);
+        } finally {
+            setIsLoading(false);
+            setIsAlertOpen(false);
         }
     };
 
@@ -114,27 +154,67 @@ export function StatisticsDialog({
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-full h-[100dvh] sm:h-[100dvh] sm:max-h-[100dvh] sm:max-w-[100vw] p-0 flex flex-col rounded-none border-none">
                 <DialogHeader className="p-4 border-b sticky top-0 bg-background z-10 flex-row items-center justify-between">
-                    <DialogTitle className="text-xl">
-                        Daily Statistics
-                    </DialogTitle>
+                    <div className="flex items-center gap-2">
+                        <DialogTitle className="text-xl">
+                            {t("title")}
+                        </DialogTitle>
+                        <AlertDialog
+                            open={isAlertOpen}
+                            onOpenChange={setIsAlertOpen}
+                        >
+                            <AlertDialogTrigger asChild>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                >
+                                    <RotateCcw className="ml-4 h-4 w-4" />
+                                    <span className="sr-only">
+                                        {t("reset")}
+                                    </span>
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="max-w-[320px] lg:max-w-[360px]">
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                        {t("reset")}
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        {t("resetConfirmation")}
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>
+                                        {t("cancel")}
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={handleResetStats}
+                                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                        {t("confirmReset")}
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
                     <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => onOpenChange(false)}
                     >
                         <X className="h-5 w-5" />
-                        <span className="sr-only">Close</span>
+                        <span className="sr-only">{tAccess("close")}</span>
                     </Button>
                 </DialogHeader>
 
                 <div className="flex-1 overflow-auto p-4">
                     {isLoading ? (
                         <div className="flex items-center justify-center h-full">
-                            <p>Loading statistics...</p>
+                            <p>{t("loading")}</p>
                         </div>
                     ) : stats.length === 0 ? (
                         <div className="flex items-center justify-center h-full">
-                            <p>No statistics available yet.</p>
+                            <p>{t("noData")}</p>
                         </div>
                     ) : (
                         <div className="w-full">
@@ -148,7 +228,7 @@ export function StatisticsDialog({
                                         onClick={toggleSortDirection}
                                     >
                                         <span className="text-xs sm:text-sm">
-                                            Date
+                                            {t("date")}
                                         </span>
                                         <ArrowUpDown className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
                                     </Button>
@@ -156,19 +236,19 @@ export function StatisticsDialog({
                                 <div className="flex items-center justify-center gap-1">
                                     <CircleDollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
                                     <span className="text-xs sm:text-sm">
-                                        Sessions
+                                        {t("sessions")}
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-center gap-1">
                                     <Flag className="h-3 w-3 sm:h-4 sm:w-4" />
                                     <span className="text-xs sm:text-sm">
-                                        Intervals
+                                        {t("intervals")}
                                     </span>
                                 </div>
                                 <div className="flex items-center justify-center gap-1">
                                     <CirclePause className="h-3 w-3 sm:h-4 sm:w-4" />
                                     <span className="text-xs sm:text-sm">
-                                        Pauses
+                                        {t("pauses")}
                                     </span>
                                 </div>
                             </div>

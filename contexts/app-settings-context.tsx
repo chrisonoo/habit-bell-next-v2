@@ -7,10 +7,13 @@ import {
     useEffect,
     type ReactNode,
 } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import { useParams } from "next/navigation";
+import type { Locale } from "@/config";
 
 // Types for application settings
 export type ThemeType = "light" | "dark";
-export type LanguageType = "en" | "pl" | "no";
+export type LanguageType = Locale;
 
 // Interface for application settings context
 interface AppSettingsContextType {
@@ -42,10 +45,17 @@ interface AppSettingsProviderProps {
 
 // Application settings context provider
 export function AppSettingsProvider({ children }: AppSettingsProviderProps) {
+    const router = useRouter();
+    const pathname = usePathname();
+    const params = useParams();
+    const locale = (params.locale as string) || "en";
+
     // Initialize state from localStorage or default values
     // We use dark theme by default
     const [theme, setThemeState] = useState<ThemeType>("dark");
-    const [language, setLanguageState] = useState<LanguageType>("en");
+    const [language, setLanguageState] = useState<LanguageType>(
+        locale as LanguageType
+    );
 
     // Effect to load settings from localStorage on initialization
     useEffect(() => {
@@ -67,25 +77,41 @@ export function AppSettingsProvider({ children }: AppSettingsProviderProps) {
                 setThemeState("dark");
             }
 
-            if (savedLanguage) {
-                setLanguageState(savedLanguage);
-            } else {
+            if (savedLanguage && savedLanguage !== locale) {
+                // If saved language differs from URL locale, update URL
+                const newPathname = pathname.replace(
+                    `/${locale}`,
+                    `/${savedLanguage}`
+                );
+                router.push(newPathname);
+            } else if (!savedLanguage) {
                 // If no saved language, try to detect browser language
                 const browserLanguage = navigator.language.toLowerCase();
+                let detectedLanguage: LanguageType = "en";
+
                 if (browserLanguage.startsWith("pl")) {
-                    setLanguageState("pl");
+                    detectedLanguage = "pl";
                 } else if (
                     browserLanguage.startsWith("no") ||
                     browserLanguage.startsWith("nb") ||
                     browserLanguage.startsWith("nn")
                 ) {
-                    setLanguageState("no");
-                } else {
-                    setLanguageState("en");
+                    detectedLanguage = "no";
+                }
+
+                setLanguageState(detectedLanguage);
+                localStorage.setItem("habit-bell-language", detectedLanguage);
+
+                if (detectedLanguage !== locale) {
+                    const newPathname = pathname.replace(
+                        `/${locale}`,
+                        `/${detectedLanguage}`
+                    );
+                    router.push(newPathname);
                 }
             }
         }
-    }, []);
+    }, [locale, pathname, router]);
 
     // Effect to apply theme
     useEffect(() => {
@@ -115,6 +141,15 @@ export function AppSettingsProvider({ children }: AppSettingsProviderProps) {
         // Save new language in localStorage
         if (typeof window !== "undefined") {
             localStorage.setItem("habit-bell-language", newLanguage);
+
+            // Update URL to reflect language change
+            if (newLanguage !== locale) {
+                const newPathname = pathname.replace(
+                    `/${locale}`,
+                    `/${newLanguage}`
+                );
+                router.push(newPathname);
+            }
         }
     };
 

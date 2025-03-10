@@ -3,6 +3,7 @@
 import type React from "react";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import {
     Dialog,
     DialogContent,
@@ -62,6 +63,9 @@ export function TimerSettingsDialog({
     isOpen,
     onOpenChange,
 }: TimerSettingsDialogProps) {
+    // Get translations
+    const t = useTranslations("settings");
+
     // Local state for session duration
     // This allows the user to modify the value without immediately applying it
     const [session, setSession] = useState<TimeValue>(sessionDuration);
@@ -90,12 +94,6 @@ export function TimerSettingsDialog({
             onOpenChange(false);
         }
     };
-
-    /**
-     * Handle dialog open state change
-     * This calls the appropriate callbacks based on the new state
-     * @param {boolean} open - New open state
-     */
 
     /**
      * Handle session minutes input change
@@ -199,7 +197,7 @@ export function TimerSettingsDialog({
             {/* Dialog Content */}
             <DialogContent className="max-w-[320px] lg:max-w-[360px]">
                 <DialogHeader>
-                    <DialogTitle>Timer Settings</DialogTitle>
+                    <DialogTitle>{t("title")}</DialogTitle>
                     <DialogDescription></DialogDescription>
                 </DialogHeader>
 
@@ -207,7 +205,9 @@ export function TimerSettingsDialog({
                 <div className="grid gap-4 py-2">
                     {/* Session Duration Settings */}
                     <div className="space-y-2">
-                        <Label className="text-base">Session Duration</Label>
+                        <Label className="text-base">
+                            {t("sessionDuration")}
+                        </Label>
                         <div className="flex items-center gap-2">
                             {/* Minutes Input with +/- buttons */}
                             <div className="flex-1 flex items-center gap-1">
@@ -223,7 +223,7 @@ export function TimerSettingsDialog({
                                     >
                                         <Minus className="h-4 w-4" />
                                         <span className="sr-only">
-                                            Decrease minutes
+                                            {t("decreaseMinutes")}
                                         </span>
                                     </Button>
                                     <Input
@@ -245,11 +245,11 @@ export function TimerSettingsDialog({
                                     >
                                         <Plus className="h-4 w-4" />
                                         <span className="sr-only">
-                                            Increase minutes
+                                            {t("increaseMinutes")}
                                         </span>
                                     </Button>
                                 </div>
-                                <span className="text-sm">min</span>
+                                <span className="text-sm">{t("minutes")}</span>
                             </div>
 
                             {/* Seconds Input with +/- buttons */}
@@ -266,7 +266,7 @@ export function TimerSettingsDialog({
                                     >
                                         <Minus className="h-4 w-4" />
                                         <span className="sr-only">
-                                            Decrease seconds
+                                            {t("decreaseSeconds")}
                                         </span>
                                     </Button>
                                     <Input
@@ -288,18 +288,20 @@ export function TimerSettingsDialog({
                                     >
                                         <Plus className="h-4 w-4" />
                                         <span className="sr-only">
-                                            Increase seconds
+                                            {t("increaseSeconds")}
                                         </span>
                                     </Button>
                                 </div>
-                                <span className="text-sm">sec</span>
+                                <span className="text-sm">{t("seconds")}</span>
                             </div>
                         </div>
                     </div>
 
                     {/* Interval Duration Settings */}
                     <div className="space-y-2">
-                        <Label className="text-base">Interval Duration</Label>
+                        <Label className="text-base">
+                            {t("intervalDuration")}
+                        </Label>
                         <div className="flex items-center gap-2">
                             {/* Minutes Input with +/- buttons */}
                             <div className="flex-1 flex items-center gap-1">
@@ -315,7 +317,7 @@ export function TimerSettingsDialog({
                                     >
                                         <Minus className="h-4 w-4" />
                                         <span className="sr-only">
-                                            Decrease minutes
+                                            {t("decreaseMinutes")}
                                         </span>
                                     </Button>
                                     <Input
@@ -337,11 +339,11 @@ export function TimerSettingsDialog({
                                     >
                                         <Plus className="h-4 w-4" />
                                         <span className="sr-only">
-                                            Increase minutes
+                                            {t("increaseMinutes")}
                                         </span>
                                     </Button>
                                 </div>
-                                <span className="text-sm">min</span>
+                                <span className="text-sm">{t("minutes")}</span>
                             </div>
 
                             {/* Seconds Input with +/- buttons */}
@@ -358,7 +360,7 @@ export function TimerSettingsDialog({
                                     >
                                         <Minus className="h-4 w-4" />
                                         <span className="sr-only">
-                                            Decrease seconds
+                                            {t("decreaseSeconds")}
                                         </span>
                                     </Button>
                                     <Input
@@ -380,11 +382,11 @@ export function TimerSettingsDialog({
                                     >
                                         <Plus className="h-4 w-4" />
                                         <span className="sr-only">
-                                            Increase seconds
+                                            {t("increaseSeconds")}
                                         </span>
                                     </Button>
                                 </div>
-                                <span className="text-sm">sec</span>
+                                <span className="text-sm">{t("seconds")}</span>
                             </div>
                         </div>
                     </div>
@@ -392,7 +394,7 @@ export function TimerSettingsDialog({
 
                 {/* Save Button */}
                 <Button onClick={handleSave} className="w-full">
-                    Save Settings
+                    {t("save")}
                 </Button>
             </DialogContent>
         </Dialog>

@@ -1,10 +1,6 @@
-import { HabitTimer } from "@/components/habit-timer"
+import { redirect } from "next/navigation";
+import { defaultLocale } from "@/config";
 
-export default function Home() {
-  return (
-    <main className="bg-background text-foreground min-h-screen">
-      <HabitTimer />
-    </main>
-  )
+export default function RootPage() {
+    redirect(`/${defaultLocale}`);
 }
-
