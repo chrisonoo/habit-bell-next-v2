@@ -1,0 +1,74 @@
+{
+    "app": {
+        "title": "Habit Bell",
+        "description": "En Pomodoro-stil timer for å hjelpe deg med å bygge vaner"
+    },
+    "navigation": {
+        "statistics": "Statistikk",
+        "settings": "Innstillinger",
+        "help": "Hjelp",
+        "about": "Om"
+    },
+    "timer": {
+        "session": "Økt",
+        "interval": "Intervall",
+        "reset": "Nullstill timer",
+        "fullscreen": "Veksle fullskjerm",
+        "start": "Start timer",
+        "pause": "Pause timer",
+        "initializing": "Initialiserer timer..."
+    },
+    "statistics": {
+        "title": "Daglig statistikk",
+        "sessions": "Økter",
+        "intervals": "Intervaller",
+        "pauses": "Pauser",
+        "date": "Dato",
+        "reset": "Nullstill statistikk",
+        "resetConfirmation": "Dette vil permanent slette all aktivitetsstatistikken din. Denne handlingen kan ikke angres.",
+        "noData": "Ingen statistikk tilgjengelig ennå.",
+        "loading": "Laster statistikk...",
+        "sessionCounter": "Økt-teller",
+        "intervalCounter": "Intervall-teller",
+        "pauseCounter": "Pause-teller",
+        "cancel": "Avbryt",
+        "confirmReset": "Nullstill"
+    },
+    "settings": {
+        "title": "Timer-innstillinger",
+        "sessionDuration": "Økt-varighet",
+        "intervalDuration": "Intervall-varighet",
+        "minutes": "min",
+        "seconds": "sek",
+        "save": "Lagre innstillinger",
+        "decreaseMinutes": "Reduser minutter",
+        "increaseMinutes": "Øk minutter",
+        "decreaseSeconds": "Reduser sekunder",
+        "increaseSeconds": "Øk sekunder"
+    },
+    "theme": {
+        "title": "Tema",
+        "light": "Lyst",
+        "dark": "Mørkt"
+    },
+    "language": {
+        "title": "Språk",
+        "english": "English",
+        "polish": "Polski",
+        "norwegian": "Norsk"
+    },
+    "accessibility": {
+        "close": "Lukk",
+        "menu": "Meny"
+    },
+    "pages": {
+        "help": {
+            "title": "Hjelp",
+            "content": "<h2>Komme i gang</h2><p>Habit Bell er en Pomodoro-stil timer designet for å hjelpe deg med å bygge vaner gjennom fokuserte arbeidsøkter og regelmessige pauser.</p><h2>Hvordan bruke</h2><p>1. Sett ønsket varighet for økt og intervall i Innstillinger.</p><p>2. Trykk på avspillingsknappen for å starte timeren.</p><p>3. Arbeid til intervalltimeren er fullført.</p><p>4. Ta en kort pause når intervallet er slutt.</p><p>5. Fortsett til økten er fullført.</p><h2>Statistikk</h2><p>Habit Bell sporer øktene, intervallene og pausene dine for å hjelpe deg med å overvåke fremgangen over tid.</p><h2>Tastatursnarveier</h2><p>Mellomrom: Start/Pause timer</p><p>R: Nullstill timer</p><p>F: Veksle fullskjerm</p>"
+        },
+        "about": {
+            "title": "Om",
+            "content": "<h2>Habit Bell</h2><p>Versjon 1.0.0</p><p>Habit Bell er et produktivitetsverktøy designet for å hjelpe deg med å bygge konsistente vaner gjennom tidsbegrensede arbeidsøkter.</p><h2>Funksjoner</h2><ul><li>Tilpassbare varigheter for økter og intervaller</li><li>Aktivitetssporing og statistikk</li><li>Mørke og lyse temaer</li><li>Støtte for flere språk</li></ul><h2>Teknologier</h2><p>Bygget med Next.js, React og IndexedDB for en rask, responsiv opplevelse som fungerer offline.</p><h2>Personvern</h2><p>Alle dataene dine lagres lokalt på enheten din. Vi samler ikke inn eller overfører personlig informasjon.</p>"
+        }
+    }
+}

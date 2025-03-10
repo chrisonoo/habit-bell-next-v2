@@ -1,0 +1,74 @@
+{
+    "app": {
+        "title": "Habit Bell",
+        "description": "Timer w stylu Pomodoro pomagający budować nawyki"
+    },
+    "navigation": {
+        "statistics": "Statystyki",
+        "settings": "Ustawienia",
+        "help": "Pomoc",
+        "about": "O aplikacji"
+    },
+    "timer": {
+        "session": "Sesja",
+        "interval": "Interwał",
+        "reset": "Resetuj timer",
+        "fullscreen": "Przełącz pełny ekran",
+        "start": "Uruchom timer",
+        "pause": "Wstrzymaj timer",
+        "initializing": "Inicjalizacja timera..."
+    },
+    "statistics": {
+        "title": "Statystyki dzienne",
+        "sessions": "Sesje",
+        "intervals": "Interwały",
+        "pauses": "Pauzy",
+        "date": "Data",
+        "reset": "Resetuj statystyki",
+        "resetConfirmation": "Ta operacja trwale usunie wszystkie twoje statystyki aktywności. Tej akcji nie można cofnąć.",
+        "noData": "Brak dostępnych statystyk.",
+        "loading": "Ładowanie statystyk...",
+        "sessionCounter": "Licznik sesji",
+        "intervalCounter": "Licznik interwałów",
+        "pauseCounter": "Licznik pauz",
+        "cancel": "Anuluj",
+        "confirmReset": "Resetuj"
+    },
+    "settings": {
+        "title": "Ustawienia timera",
+        "sessionDuration": "Czas trwania sesji",
+        "intervalDuration": "Czas trwania interwału",
+        "minutes": "min",
+        "seconds": "sek",
+        "save": "Zapisz ustawienia",
+        "decreaseMinutes": "Zmniejsz minuty",
+        "increaseMinutes": "Zwiększ minuty",
+        "decreaseSeconds": "Zmniejsz sekundy",
+        "increaseSeconds": "Zwiększ sekundy"
+    },
+    "theme": {
+        "title": "Motyw",
+        "light": "Jasny",
+        "dark": "Ciemny"
+    },
+    "language": {
+        "title": "Język",
+        "english": "English",
+        "polish": "Polski",
+        "norwegian": "Norsk"
+    },
+    "accessibility": {
+        "close": "Zamknij",
+        "menu": "Menu"
+    },
+    "pages": {
+        "help": {
+            "title": "Pomoc",
+            "content": "<h2>Pierwsze kroki</h2><p>Habit Bell to timer w stylu Pomodoro zaprojektowany, aby pomóc Ci budować nawyki poprzez sesje skupionej pracy i regularne przerwy.</p><h2>Jak używać</h2><p>1. Ustaw pożądany czas trwania sesji i interwałów w Ustawieniach.</p><p>2. Naciśnij przycisk odtwarzania, aby uruchomić timer.</p><p>3. Pracuj, aż timer interwału się zakończy.</p><p>4. Zrób krótką przerwę, gdy interwał się skończy.</p><p>5. Kontynuuj, aż sesja zostanie zakończona.</p><h2>Statystyki</h2><p>Habit Bell śledzi Twoje sesje, interwały i pauzy, aby pomóc Ci monitorować postępy w czasie.</p><h2>Skróty klawiaturowe</h2><p>Spacja: Uruchom/Wstrzymaj timer</p><p>R: Resetuj timer</p><p>F: Przełącz pełny ekran</p>"
+        },
+        "about": {
+            "title": "O aplikacji",
+            "content": "<h2>Habit Bell</h2><p>Wersja 1.0.0</p><p>Habit Bell to narzędzie zwiększające produktywność, zaprojektowane, aby pomóc Ci budować spójne nawyki poprzez czasowe sesje pracy.</p><h2>Funkcje</h2><ul><li>Konfigurowalne czasy trwania sesji i interwałów</li><li>Śledzenie aktywności i statystyki</li><li>Jasny i ciemny motyw</li><li>Wsparcie dla wielu języków</li></ul><h2>Technologie</h2><p>Zbudowane z użyciem Next.js, React i IndexedDB dla szybkiego, responsywnego doświadczenia, które działa offline.</p><h2>Prywatność</h2><p>Wszystkie Twoje dane są przechowywane lokalnie na Twoim urządzeniu. Nie zbieramy ani nie przesyłamy żadnych danych osobowych.</p>"
+        }
+    }
+}

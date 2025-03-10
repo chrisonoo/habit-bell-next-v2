@@ -5,6 +5,7 @@ import { CircleDollarSign, CirclePause, Flag } from "lucide-react";
 import { useActivityContext } from "@/contexts/activity-context";
 import { useEffect, useState } from "react";
 import { StatisticsDialog } from "@/components/statistics-dialog";
+import { useTranslations } from "next-intl";
 
 /**
  * Statistics Component
@@ -15,6 +16,9 @@ import { StatisticsDialog } from "@/components/statistics-dialog";
  * @returns {JSX.Element} The rendered component
  */
 export function Statistics() {
+    // Get translations
+    const t = useTranslations("statistics");
+
     // Get activity counts from context
     const { todayPauseCount, todayIntervalCount, todaySessionCount } =
         useActivityContext();
@@ -61,7 +65,7 @@ export function Statistics() {
                         onClick={openStatisticsDialog}
                     >
                         <CircleDollarSign className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
-                        <span className="sr-only">Session counter</span>
+                        <span className="sr-only">{t("sessionCounter")}</span>
                     </Button>
                     <div className="text-xl lg:text-2xl">
                         {todaySessionCount}
@@ -77,7 +81,7 @@ export function Statistics() {
                         onClick={openStatisticsDialog}
                     >
                         <Flag className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
-                        <span className="sr-only">Interval counter</span>
+                        <span className="sr-only">{t("intervalCounter")}</span>
                     </Button>
                     <div className="text-xl lg:text-2xl">
                         {todayIntervalCount}
@@ -93,7 +97,7 @@ export function Statistics() {
                         onClick={openStatisticsDialog}
                     >
                         <CirclePause className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
-                        <span className="sr-only">Pause counter</span>
+                        <span className="sr-only">{t("pauseCounter")}</span>
                     </Button>
                     <div className="text-xl lg:text-2xl">{todayPauseCount}</div>
                 </div>

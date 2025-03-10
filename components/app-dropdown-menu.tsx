@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -29,6 +30,7 @@ import {
     type ThemeType,
     type LanguageType,
 } from "@/contexts/app-settings-context";
+import Link from "next/link";
 
 interface AppDropdownMenuProps {
     onOpenStatistics: () => void;
@@ -41,6 +43,11 @@ export function AppDropdownMenu({
 }: AppDropdownMenuProps) {
     const { theme, language, setTheme, setLanguage } = useAppSettings();
     const [isOpen, setIsOpen] = useState(false);
+
+    const tNav = useTranslations("navigation");
+    const tTheme = useTranslations("theme");
+    const tLang = useTranslations("language");
+    const tAccess = useTranslations("accessibility");
 
     // Function to handle menu item click
     const handleMenuItemClick = (action: () => void) => {
@@ -66,13 +73,13 @@ export function AppDropdownMenu({
     const getLanguageName = (lang: LanguageType): string => {
         switch (lang) {
             case "en":
-                return "English";
+                return tLang("english");
             case "pl":
-                return "Polski";
+                return tLang("polish");
             case "no":
-                return "Norsk";
+                return tLang("norwegian");
             default:
-                return "English";
+                return tLang("english");
         }
     };
 
@@ -99,7 +106,7 @@ export function AppDropdownMenu({
                     className="h-10 w-10 lg:h-14 lg:w-14"
                 >
                     <EllipsisVertical className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
-                    <span className="sr-only">Menu</span>
+                    <span className="sr-only">{tAccess("menu")}</span>
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
@@ -111,21 +118,25 @@ export function AppDropdownMenu({
                         onClick={() => handleMenuItemClick(onOpenStatistics)}
                     >
                         <BarChart2 className="mr-2 h-4 w-4" />
-                        <span>Statistics</span>
+                        <span>{tNav("statistics")}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         onClick={() => handleMenuItemClick(onOpenSettings)}
                     >
                         <Settings className="mr-2 h-4 w-4" />
-                        <span>Settings</span>
+                        <span>{tNav("settings")}</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem disabled>
-                        <HelpCircle className="mr-2 h-4 w-4" />
-                        <span>Help</span>
+                    <DropdownMenuItem asChild>
+                        <Link href="/help">
+                            <HelpCircle className="mr-2 h-4 w-4" />
+                            <span>{tNav("help")}</span>
+                        </Link>
                     </DropdownMenuItem>
-                    <DropdownMenuItem disabled>
-                        <Info className="mr-2 h-4 w-4" />
-                        <span>About</span>
+                    <DropdownMenuItem asChild>
+                        <Link href="/about">
+                            <Info className="mr-2 h-4 w-4" />
+                            <span>{tNav("about")}</span>
+                        </Link>
                     </DropdownMenuItem>
                 </DropdownMenuGroup>
 
@@ -135,7 +146,7 @@ export function AppDropdownMenu({
                 <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                         <Languages className="mr-2 h-4 w-4" />
-                        <span>Language</span>
+                        <span>{tLang("title")}</span>
                         <span className="ml-auto">{getLanguageIcon()}</span>
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
@@ -144,7 +155,7 @@ export function AppDropdownMenu({
                                 onClick={() => handleLanguageChange("en")}
                             >
                                 <span className="mr-2">🇬🇧</span>
-                                <span>English</span>
+                                <span>{tLang("english")}</span>
                                 {language === "en" && (
                                     <span className="ml-auto">✓</span>
                                 )}
@@ -153,7 +164,7 @@ export function AppDropdownMenu({
                                 onClick={() => handleLanguageChange("pl")}
                             >
                                 <span className="mr-2">🇵🇱</span>
-                                <span>Polski</span>
+                                <span>{tLang("polish")}</span>
                                 {language === "pl" && (
                                     <span className="ml-auto">✓</span>
                                 )}
@@ -162,7 +173,7 @@ export function AppDropdownMenu({
                                 onClick={() => handleLanguageChange("no")}
                             >
                                 <span className="mr-2">🇳🇴</span>
-                                <span>Norsk</span>
+                                <span>{tLang("norwegian")}</span>
                                 {language === "no" && (
                                     <span className="ml-auto">✓</span>
                                 )}
@@ -179,7 +190,7 @@ export function AppDropdownMenu({
                         ) : (
                             <Moon className="mr-2 h-4 w-4" />
                         )}
-                        <span>Theme</span>
+                        <span>{tTheme("title")}</span>
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
                         <DropdownMenuSubContent className="bg-background border border-border shadow-lg">
@@ -187,7 +198,7 @@ export function AppDropdownMenu({
                                 onClick={() => handleThemeChange("light")}
                             >
                                 <Sun className="mr-2 h-4 w-4" />
-                                <span>Light</span>
+                                <span>{tTheme("light")}</span>
                                 {theme === "light" && (
                                     <span className="ml-auto">✓</span>
                                 )}
@@ -196,7 +207,7 @@ export function AppDropdownMenu({
                                 onClick={() => handleThemeChange("dark")}
                             >
                                 <Moon className="mr-2 h-4 w-4" />
-                                <span>Dark</span>
+                                <span>{tTheme("dark")}</span>
                                 {theme === "dark" && (
                                     <span className="ml-auto">✓</span>
                                 )}

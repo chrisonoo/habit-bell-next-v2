@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Play, Pause } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 /**
  * Props for the TimerControls component
@@ -32,6 +33,9 @@ export function TimerControls({
     onToggle,
     className,
 }: TimerControlsProps) {
+    // Get translations
+    const t = useTranslations("timer");
+
     // Local state to track button state
     // This provides an additional layer of state management to ensure UI consistency
     const [localIsRunning, setLocalIsRunning] = useState(isRunning);
@@ -57,7 +61,7 @@ export function TimerControls({
                 size="lg"
                 className="rounded-full h-16 w-16"
                 onClick={handleClick}
-                aria-label={localIsRunning ? "Pause timer" : "Start timer"}
+                aria-label={localIsRunning ? t("pause") : t("start")}
             >
                 {/* Show different icon based on timer state */}
                 {localIsRunning ? (
