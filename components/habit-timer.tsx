@@ -6,14 +6,10 @@ import { BellLogo } from "@/components/bell-logo";
 import { TimerControls } from "@/components/timer-controls";
 import { TimerSettingsDialog } from "@/components/timer-settings-dialog";
 import { formatTime } from "@/services/time-service";
-import {
-    CircleDollarSign,
-    CirclePause,
-    TimerReset,
-    Maximize,
-    Flag,
-} from "lucide-react";
+import { TimerReset, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Statistics } from "@/components/statistics";
+import { useActivityContext } from "@/contexts/activity-context";
 
 /**
  * Interface for timer state managed by worker
@@ -58,6 +54,16 @@ interface TimeValue {
  * @returns {JSX.Element} The rendered component
  */
 export function HabitTimer() {
+    // Pobierz funkcje do rejestrowania aktywności z kontekstu
+    const { registerPause, registerInterval, registerSession } =
+        useActivityContext();
+    console.log(
+        "[MAIN][DEBUG] Activity functions available:",
+        !!registerPause,
+        !!registerInterval,
+        !!registerSession
+    );
+
     // Reference to store timer state from worker - without default values
     // Using a ref instead of state prevents unnecessary re-renders and race conditions
     const timerStateRef = useRef<TimerState | null>(null);
@@ -81,6 +87,21 @@ export function HabitTimer() {
     // Add forceUpdate function
     // This is used to trigger re-renders when ref values change
     const forceUpdate = useReducer((x) => x + 1, 0)[1];
+
+    // Ref do śledzenia poprzedniego stanu timera (czy był uruchomiony)
+    const wasRunningRef = useRef(false);
+
+    // Ref do śledzenia poprzedniej wartości intervalTimeLeft
+    const prevIntervalTimeLeftRef = useRef<number | null>(null);
+
+    // Ref do śledzenia poprzedniej wartości sessionTimeLeft
+    const prevSessionTimeLeftRef = useRef<number | null>(null);
+
+    // Ref do śledzenia, czy sesja została już zarejestrowana
+    const sessionRegisteredRef = useRef(false);
+
+    // Ref do śledzenia, czy timer jest w trakcie ręcznego resetu
+    const isManualResetRef = useRef(false);
 
     /**
      * Initialize Web Worker
@@ -120,6 +141,72 @@ export function HabitTimer() {
 
                 // Handle timer state updates
                 if (type === "UPDATE") {
+                    // Dodajmy więcej logów do debugowania
+                    console.log(
+                        `[MAIN][DEBUG] Timer state change: wasRunning=${wasRunningRef.current}, isNowRunning=${payload.isRunning}`
+                    );
+
+                    // Sprawdź, czy interwał się zakończył (reset do pełnej wartości lub koniec sesji)
+                    const isIntervalReset =
+                        prevIntervalTimeLeftRef.current !== null &&
+                        prevIntervalTimeLeftRef.current <= 1 &&
+                        payload.intervalTimeLeft ===
+                            settingsRef.current?.intervalDuration;
+
+                    const isSessionEnd =
+                        prevSessionTimeLeftRef.current !== null &&
+                        prevSessionTimeLeftRef.current > 0 &&
+                        payload.sessionTimeLeft === 0;
+
+                    // Sprawdź, czy sesja się zakończyła
+                    if (
+                        isSessionEnd &&
+                        !sessionRegisteredRef.current &&
+                        wasRunningRef.current
+                    ) {
+                        console.log(
+                            "[MAIN][DEBUG] Session completed, registering session"
+                        );
+                        registerSession();
+                        sessionRegisteredRef.current = true;
+                    }
+
+                    // Jeśli sesja została zresetowana (nowa sesja), zresetuj flagę rejestracji sesji
+                    if (
+                        payload.sessionTimeLeft ===
+                            settingsRef.current?.sessionDuration &&
+                        prevSessionTimeLeftRef.current !==
+                            settingsRef.current?.sessionDuration
+                    ) {
+                        sessionRegisteredRef.current = false;
+                    }
+
+                    // Sprawdź, czy interwał się zakończył - dodajemy warunek !isManualResetRef.current
+                    if (
+                        (isIntervalReset ||
+                            (isSessionEnd && payload.intervalTimeLeft === 0)) &&
+                        wasRunningRef.current &&
+                        !isManualResetRef.current
+                    ) {
+                        console.log(
+                            "[MAIN][DEBUG] Interval completed, registering interval. Reset:",
+                            isIntervalReset,
+                            "Session end:",
+                            isSessionEnd
+                        );
+                        registerInterval();
+                    }
+
+                    // Resetujemy flagę ręcznego resetu po przetworzeniu aktualizacji
+                    isManualResetRef.current = false;
+
+                    // Zapisz aktualne wartości do porównania przy następnej aktualizacji
+                    prevIntervalTimeLeftRef.current = payload.intervalTimeLeft;
+                    prevSessionTimeLeftRef.current = payload.sessionTimeLeft;
+
+                    // Aktualizuj ref śledzący stan timera
+                    wasRunningRef.current = payload.isRunning;
+
                     // Update timer state reference
                     timerStateRef.current = payload;
 
@@ -130,6 +217,7 @@ export function HabitTimer() {
                 else if (type === "SETTINGS_UPDATE") {
                     // Update timer settings reference
                     settingsRef.current = payload;
+                    console.log("[MAIN][DEBUG] Settings updated:", payload);
 
                     // Force component re-render to reflect the new settings
                     forceUpdate();
@@ -142,7 +230,7 @@ export function HabitTimer() {
                 workerRef.current.postMessage({ type: "GET_INITIAL_SETTINGS" });
             }
         }
-    }, []); // Empty dependency array ensures this runs only once
+    }, [registerInterval, registerSession]); // Dodajemy registerSession do zależności
 
     /**
      * Reset timer to initial state
@@ -151,6 +239,10 @@ export function HabitTimer() {
     const resetTimer = useCallback(() => {
         if (workerRef.current) {
             console.log("[MAIN][04] Sending RESET to worker");
+            // Ustawiamy flagę ręcznego resetu
+            isManualResetRef.current = true;
+            // Resetujemy flagę rejestracji sesji
+            sessionRegisteredRef.current = false;
             workerRef.current.postMessage({ type: "RESET" });
         }
     }, []);
@@ -177,6 +269,10 @@ export function HabitTimer() {
             // Send to worker
             // The worker will update the settings in IndexedDB
             if (workerRef.current) {
+                // Ustawiamy flagę ręcznego resetu
+                isManualResetRef.current = true;
+                // Resetujemy flagę rejestracji sesji
+                sessionRegisteredRef.current = false;
                 workerRef.current.postMessage({
                     type: "UPDATE_SETTINGS",
                     payload: {
@@ -212,8 +308,17 @@ export function HabitTimer() {
 
         const command = timerStateRef.current.isRunning ? "PAUSE" : "START";
         console.log(`[MAIN][07] Sending ${command} to worker`);
+
+        // Jeśli pauzujemy timer, zarejestruj pauzę
+        if (command === "PAUSE") {
+            console.log(
+                "[MAIN][DEBUG] Pause button clicked, registering pause"
+            );
+            registerPause();
+        }
+
         workerRef.current.postMessage({ type: command });
-    }, []);
+    }, [registerPause]);
 
     /**
      * Toggle fullscreen
@@ -263,50 +368,8 @@ export function HabitTimer() {
 
     return (
         <div className="relative flex flex-col items-center justify-between min-h-screen overflow-hidden">
-            {/* Top Left Controls */}
-            <div className="absolute top-4 left-4 z-10 flex gap-3 items-center">
-                {/* Coins Counter Button */}
-                <div className="flex gap-1 items-center">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-10 w-10 lg:h-14 lg:w-14"
-                        onClick={resetTimer}
-                    >
-                        <CircleDollarSign className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
-                        <span className="sr-only">Reset timer</span>
-                    </Button>
-                    <div className="text-xl lg:text-2xl">2</div>
-                </div>
-
-                {/* Interval Counter Button */}
-                <div className="flex gap-1 items-center">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-10 w-10 lg:h-14 lg:w-14"
-                        onClick={resetTimer}
-                    >
-                        <Flag className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
-                        <span className="sr-only">Reset timer</span>
-                    </Button>
-                    <div className="text-xl lg:text-2xl">2</div>
-                </div>
-
-                {/* Pause Counter Button */}
-                <div className="flex gap-1 items-center">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-10 w-10 lg:h-14 lg:w-14"
-                        onClick={resetTimer}
-                    >
-                        <CirclePause className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
-                        <span className="sr-only">Reset timer</span>
-                    </Button>
-                    <div className="text-xl lg:text-2xl">2</div>
-                </div>
-            </div>
+            {/* Statistics Component */}
+            <Statistics />
 
             {/* Logo */}
             <BellLogo />
