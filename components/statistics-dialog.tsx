@@ -111,29 +111,18 @@ export function StatisticsDialog({
     };
 
     /**
-     * Format a date string to a more readable format using system locale
+     * Format a date string to YYYY-MM-DD format
      * @param {string} dateStr - The date string in YYYY-MM-DD format
      * @returns {string} The formatted date string
      */
     const formatDate = (dateStr: string): string => {
+        // Since the date is already in YYYY-MM-DD format in the database,
+        // we can simply return it as is
         if (!dateStr || !dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
             return "Invalid date";
         }
 
-        try {
-            const [year, month, day] = dateStr.split("-").map(Number);
-            const date = new Date(year, month - 1, day);
-
-            if (isNaN(date.getTime())) {
-                return "Invalid date";
-            }
-
-            // Use system locale for date formatting
-            return date.toLocaleDateString();
-        } catch (error) {
-            console.error("Error formatting date:", error);
-            return "Invalid date";
-        }
+        return dateStr;
     };
 
     return (
