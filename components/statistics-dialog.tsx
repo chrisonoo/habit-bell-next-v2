@@ -110,21 +110,6 @@ export function StatisticsDialog({
         setStats(sortStatsByDate(stats, newDirection));
     };
 
-    /**
-     * Format a date string to YYYY-MM-DD format
-     * @param {string} dateStr - The date string in YYYY-MM-DD format
-     * @returns {string} The formatted date string
-     */
-    const formatDate = (dateStr: string): string => {
-        // Since the date is already in YYYY-MM-DD format in the database,
-        // we can simply return it as is
-        if (!dateStr || !dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            return "Invalid date";
-        }
-
-        return dateStr;
-    };
-
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-full h-[100dvh] sm:h-[100dvh] sm:max-h-[100dvh] sm:max-w-[100vw] p-0 flex flex-col rounded-none border-none">
@@ -196,7 +181,7 @@ export function StatisticsDialog({
                                 >
                                     <div className="flex items-center">
                                         <span className="text-xs sm:text-sm">
-                                            {formatDate(stat.date)}
+                                            {stat.date}
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-center text-xs sm:text-sm">
