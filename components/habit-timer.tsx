@@ -100,6 +100,9 @@ export function HabitTimer() {
     // Ref do śledzenia, czy sesja została już zarejestrowana
     const sessionRegisteredRef = useRef(false);
 
+    // Ref do śledzenia, czy timer jest w trakcie ręcznego resetu
+    const isManualResetRef = useRef(false);
+
     /**
      * Initialize Web Worker
      * This effect runs once when the component mounts and sets up the worker
@@ -178,11 +181,12 @@ export function HabitTimer() {
                         sessionRegisteredRef.current = false;
                     }
 
-                    // Sprawdź, czy interwał się zakończył
+                    // Sprawdź, czy interwał się zakończył - dodajemy warunek !isManualResetRef.current
                     if (
                         (isIntervalReset ||
                             (isSessionEnd && payload.intervalTimeLeft === 0)) &&
-                        wasRunningRef.current
+                        wasRunningRef.current &&
+                        !isManualResetRef.current
                     ) {
                         console.log(
                             "[MAIN][DEBUG] Interval completed, registering interval. Reset:",
@@ -192,6 +196,9 @@ export function HabitTimer() {
                         );
                         registerInterval();
                     }
+
+                    // Resetujemy flagę ręcznego resetu po przetworzeniu aktualizacji
+                    isManualResetRef.current = false;
 
                     // Zapisz aktualne wartości do porównania przy następnej aktualizacji
                     prevIntervalTimeLeftRef.current = payload.intervalTimeLeft;
@@ -232,6 +239,8 @@ export function HabitTimer() {
     const resetTimer = useCallback(() => {
         if (workerRef.current) {
             console.log("[MAIN][04] Sending RESET to worker");
+            // Ustawiamy flagę ręcznego resetu
+            isManualResetRef.current = true;
             // Resetujemy flagę rejestracji sesji
             sessionRegisteredRef.current = false;
             workerRef.current.postMessage({ type: "RESET" });
@@ -260,6 +269,8 @@ export function HabitTimer() {
             // Send to worker
             // The worker will update the settings in IndexedDB
             if (workerRef.current) {
+                // Ustawiamy flagę ręcznego resetu
+                isManualResetRef.current = true;
                 // Resetujemy flagę rejestracji sesji
                 sessionRegisteredRef.current = false;
                 workerRef.current.postMessage({
