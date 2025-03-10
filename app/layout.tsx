@@ -19,7 +19,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        // Dodajemy klasę dark do html, aby domyślnie używać ciemnego motywu
+        // Add dark class to html to use dark theme by default
         <html lang="en" className="dark">
             <body className={inter.className}>
                 <AppSettingsProvider>

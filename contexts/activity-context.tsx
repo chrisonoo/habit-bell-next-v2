@@ -8,12 +8,12 @@ import {
     type ReactNode,
 } from "react";
 
-// Interfejs dla pojedynczej aktywności (pauza, interwał lub sesja)
+// Interface for a single activity (pause, interval or session)
 export interface ActivityRecord {
     id?: number;
-    type: "pause" | "interval" | "session"; // Typ aktywności
+    type: "pause" | "interval" | "session"; // Activity type
     timestamp: number; // Unix timestamp
-    date: string; // Format YYYY-MM-DD dla łatwiejszego grupowania
+    date: string; // YYYY-MM-DD format for easier grouping
 }
 
 // Add the DailyStats interface after the ActivityRecord interface
@@ -24,7 +24,7 @@ export interface DailyStats {
     pauses: number;
 }
 
-// Interfejs dla kontekstu aktywności
+// Interface for activity context
 interface ActivityContextType {
     pauseCount: number;
     todayPauseCount: number;
@@ -38,7 +38,7 @@ interface ActivityContextType {
     getActivityStats: () => Promise<DailyStats[]>;
 }
 
-// Domyślne wartości dla kontekstu
+// Default values for context
 const defaultContext: ActivityContextType = {
     pauseCount: 0,
     todayPauseCount: 0,
@@ -52,32 +52,32 @@ const defaultContext: ActivityContextType = {
     getActivityStats: async () => [],
 };
 
-// Utworzenie kontekstu
+// Create context
 const ActivityContext = createContext<ActivityContextType>(defaultContext);
 
-// Hook do używania kontekstu aktywności
+// Hook for using activity context
 export const useActivityContext = () => useContext(ActivityContext);
 
-// Props dla providera kontekstu
+// Props for context provider
 interface ActivityProviderProps {
     children: ReactNode;
 }
 
-// Provider kontekstu aktywności
+// Activity context provider
 export function ActivityProvider({ children }: ActivityProviderProps) {
-    // Stan dla liczby wszystkich pauz i pauz z dzisiejszego dnia
+    // State for total pause count and today's pause count
     const [pauseCount, setPauseCount] = useState(0);
     const [todayPauseCount, setTodayPauseCount] = useState(0);
 
-    // Stan dla liczby wszystkich interwałów i interwałów z dzisiejszego dnia
+    // State for total interval count and today's interval count
     const [intervalCount, setIntervalCount] = useState(0);
     const [todayIntervalCount, setTodayIntervalCount] = useState(0);
 
-    // Stan dla liczby wszystkich sesji i sesji z dzisiejszego dnia
+    // State for total session count and today's session count
     const [sessionCount, setSessionCount] = useState(0);
     const [todaySessionCount, setTodaySessionCount] = useState(0);
 
-    // Funkcja pomocnicza do formatowania daty w formacie YYYY-MM-DD
+    // Helper function to format date in YYYY-MM-DD format
     const formatDate = (date: Date): string => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -85,7 +85,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
         return `${year}-${month}-${day}`;
     };
 
-    // Funkcja do otwierania bazy danych
+    // Function to open database
     const openDatabase = (): Promise<IDBDatabase> => {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open("habit-bell-db", 2);
@@ -93,15 +93,15 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
             request.onupgradeneeded = (event) => {
                 const db = (event.target as IDBOpenDBRequest).result;
 
-                // Sprawdź, czy store activities już istnieje
+                // Check if activities store already exists
                 if (!db.objectStoreNames.contains("activities")) {
-                    // Utwórz nowy store dla aktywności z auto-inkrementowanym kluczem
+                    // Create new store for activities with auto-incremented key
                     const activityStore = db.createObjectStore("activities", {
                         keyPath: "id",
                         autoIncrement: true,
                     });
 
-                    // Dodaj indeksy dla typu i daty, aby ułatwić wyszukiwanie aktywności
+                    // Add indexes for type and date to facilitate activity searches
                     activityStore.createIndex("type", "type", {
                         unique: false,
                     });
@@ -115,7 +115,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
                     console.log("[ACTIVITY][DEBUG] Created activities store");
                 }
 
-                // Upewnij się, że store settings istnieje
+                // Make sure settings store exists
                 if (!db.objectStoreNames.contains("settings")) {
                     db.createObjectStore("settings");
                     console.log("[ACTIVITY][DEBUG] Created settings store");
@@ -212,7 +212,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
         }
     };
 
-    // Funkcja do rejestrowania nowej aktywności (pauzy, interwału lub sesji)
+    // Function to register new activity (pause, interval or session)
     const registerActivity = async (type: "pause" | "interval" | "session") => {
         try {
             console.log(`[ACTIVITY][DEBUG] Registering new ${type}`);
@@ -232,7 +232,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
             addRequest.onsuccess = () => {
                 console.log(`[ACTIVITY][DEBUG] ${type} saved successfully`);
 
-                // Aktualizuj odpowiednie liczniki w zależności od typu aktywności
+                // Update appropriate counters based on activity type
                 if (type === "pause") {
                     setPauseCount((prev) => prev + 1);
                     setTodayPauseCount((prev) => prev + 1);
@@ -260,12 +260,12 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
         }
     };
 
-    // Funkcje do rejestrowania konkretnych typów aktywności
+    // Functions to register specific activity types
     const registerPause = () => registerActivity("pause");
     const registerInterval = () => registerActivity("interval");
     const registerSession = () => registerActivity("session");
 
-    // Efekt do ładowania liczby aktywności przy inicjalizacji
+    // Effect to load activity counts on initialization
     useEffect(() => {
         const loadActivityCounts = async () => {
             try {
@@ -277,7 +277,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
                 const typeIndex = store.index("type");
                 const today = formatDate(new Date());
 
-                // Pobierz całkowitą liczbę pauz
+                // Get total pause count
                 const pauseCountRequest = typeIndex.count(
                     IDBKeyRange.only("pause")
                 );
@@ -290,7 +290,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
                     );
                     setPauseCount(totalPauseCount);
 
-                    // Pobierz liczbę pauz z dzisiejszego dnia
+                    // Get today's pause count
                     const typeDateIndex = store.index("type_date");
                     const todayPauseCountRequest = typeDateIndex.count(
                         IDBKeyRange.only(["pause", today])
@@ -306,7 +306,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
                     };
                 };
 
-                // Pobierz całkowitą liczbę interwałów
+                // Get total interval count
                 const intervalCountRequest = typeIndex.count(
                     IDBKeyRange.only("interval")
                 );
@@ -319,7 +319,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
                     );
                     setIntervalCount(totalIntervalCount);
 
-                    // Pobierz liczbę interwałów z dzisiejszego dnia
+                    // Get today's interval count
                     const typeDateIndex = store.index("type_date");
                     const todayIntervalCountRequest = typeDateIndex.count(
                         IDBKeyRange.only(["interval", today])
@@ -336,7 +336,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
                     };
                 };
 
-                // Pobierz całkowitą liczbę sesji
+                // Get total session count
                 const sessionCountRequest = typeIndex.count(
                     IDBKeyRange.only("session")
                 );
@@ -349,7 +349,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
                     );
                     setSessionCount(totalSessionCount);
 
-                    // Pobierz liczbę sesji z dzisiejszego dnia
+                    // Get today's session count
                     const typeDateIndex = store.index("type_date");
                     const todaySessionCountRequest = typeDateIndex.count(
                         IDBKeyRange.only(["session", today])

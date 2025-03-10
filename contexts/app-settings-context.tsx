@@ -8,11 +8,11 @@ import {
     type ReactNode,
 } from "react";
 
-// Typy dla ustawień aplikacji
+// Types for application settings
 export type ThemeType = "light" | "dark";
 export type LanguageType = "en" | "pl" | "no";
 
-// Interfejs dla kontekstu ustawień aplikacji
+// Interface for application settings context
 interface AppSettingsContextType {
     theme: ThemeType;
     language: LanguageType;
@@ -20,7 +20,7 @@ interface AppSettingsContextType {
     setLanguage: (language: LanguageType) => void;
 }
 
-// Domyślne wartości dla kontekstu - ustawiamy dark jako domyślny
+// Default values for context - setting dark as default
 const defaultContext: AppSettingsContextType = {
     theme: "dark",
     language: "en",
@@ -28,30 +28,30 @@ const defaultContext: AppSettingsContextType = {
     setLanguage: () => {},
 };
 
-// Utworzenie kontekstu
+// Create context
 const AppSettingsContext =
     createContext<AppSettingsContextType>(defaultContext);
 
-// Hook do używania kontekstu ustawień aplikacji
+// Hook for using application settings context
 export const useAppSettings = () => useContext(AppSettingsContext);
 
-// Props dla providera kontekstu
+// Props for context provider
 interface AppSettingsProviderProps {
     children: ReactNode;
 }
 
-// Provider kontekstu ustawień aplikacji
+// Application settings context provider
 export function AppSettingsProvider({ children }: AppSettingsProviderProps) {
-    // Inicjalizacja stanu z localStorage lub wartości domyślnych
-    // Domyślnie używamy ciemnego motywu
+    // Initialize state from localStorage or default values
+    // We use dark theme by default
     const [theme, setThemeState] = useState<ThemeType>("dark");
     const [language, setLanguageState] = useState<LanguageType>("en");
 
-    // Efekt do ładowania ustawień z localStorage przy inicjalizacji
+    // Effect to load settings from localStorage on initialization
     useEffect(() => {
-        // Sprawdzamy, czy jesteśmy w środowisku przeglądarki
+        // Check if we're in browser environment
         if (typeof window !== "undefined") {
-            // Pobieramy zapisane ustawienia z localStorage
+            // Get saved settings from localStorage
             const savedTheme = localStorage.getItem(
                 "habit-bell-theme"
             ) as ThemeType | null;
@@ -59,18 +59,18 @@ export function AppSettingsProvider({ children }: AppSettingsProviderProps) {
                 "habit-bell-language"
             ) as LanguageType | null;
 
-            // Ustawiamy stan na podstawie zapisanych ustawień lub wartości domyślnych
+            // Set state based on saved settings or default values
             if (savedTheme) {
                 setThemeState(savedTheme);
             } else {
-                // Jeśli nie ma zapisanego motywu, używamy ciemnego jako domyślnego
+                // If no saved theme, use dark as default
                 setThemeState("dark");
             }
 
             if (savedLanguage) {
                 setLanguageState(savedLanguage);
             } else {
-                // Jeśli nie ma zapisanego języka, próbujemy wykryć język przeglądarki
+                // If no saved language, try to detect browser language
                 const browserLanguage = navigator.language.toLowerCase();
                 if (browserLanguage.startsWith("pl")) {
                     setLanguageState("pl");
@@ -87,11 +87,11 @@ export function AppSettingsProvider({ children }: AppSettingsProviderProps) {
         }
     }, []);
 
-    // Efekt do aplikowania motywu
+    // Effect to apply theme
     useEffect(() => {
-        // Sprawdzamy, czy jesteśmy w środowisku przeglądarki
+        // Check if we're in browser environment
         if (typeof window !== "undefined" && typeof document !== "undefined") {
-            // Aplikujemy klasę dark do elementu html, jeśli motyw jest ciemny
+            // Apply dark class to html element if theme is dark
             if (theme === "dark") {
                 document.documentElement.classList.add("dark");
             } else {
@@ -100,25 +100,25 @@ export function AppSettingsProvider({ children }: AppSettingsProviderProps) {
         }
     }, [theme]);
 
-    // Funkcja do zmiany motywu
+    // Function to change theme
     const setTheme = (newTheme: ThemeType) => {
         setThemeState(newTheme);
-        // Zapisujemy nowy motyw w localStorage
+        // Save new theme in localStorage
         if (typeof window !== "undefined") {
             localStorage.setItem("habit-bell-theme", newTheme);
         }
     };
 
-    // Funkcja do zmiany języka
+    // Function to change language
     const setLanguage = (newLanguage: LanguageType) => {
         setLanguageState(newLanguage);
-        // Zapisujemy nowy język w localStorage
+        // Save new language in localStorage
         if (typeof window !== "undefined") {
             localStorage.setItem("habit-bell-language", newLanguage);
         }
     };
 
-    // Wartość kontekstu
+    // Context value
     const value = {
         theme,
         language,

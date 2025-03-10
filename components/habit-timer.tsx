@@ -56,7 +56,7 @@ interface TimeValue {
  * @returns {JSX.Element} The rendered component
  */
 export function HabitTimer() {
-    // Pobierz funkcje do rejestrowania aktywności z kontekstu
+    // Get activity registration functions from context
     const {
         registerPause,
         registerInterval,
@@ -92,26 +92,26 @@ export function HabitTimer() {
     // This controls the visibility of the settings dialog
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-    // Dodaj stan dla dialogu statystyk
+    // Add state for statistics dialog
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     // Add forceUpdate function
     // This is used to trigger re-renders when ref values change
     const forceUpdate = useReducer((x) => x + 1, 0)[1];
 
-    // Ref do śledzenia poprzedniego stanu timera (czy był uruchomiony)
+    // Ref to track previous timer state (whether it was running)
     const wasRunningRef = useRef(false);
 
-    // Ref do śledzenia poprzedniej wartości intervalTimeLeft
+    // Ref to track previous intervalTimeLeft value
     const prevIntervalTimeLeftRef = useRef<number | null>(null);
 
-    // Ref do śledzenia poprzedniej wartości sessionTimeLeft
+    // Ref to track previous sessionTimeLeft value
     const prevSessionTimeLeftRef = useRef<number | null>(null);
 
-    // Ref do śledzenia, czy sesja została już zarejestrowana
+    // Ref to track whether session has already been registered
     const sessionRegisteredRef = useRef(false);
 
-    // Ref do śledzenia, czy timer jest w trakcie ręcznego resetu
+    // Ref to track whether timer is being manually reset
     const isManualResetRef = useRef(false);
 
     /**
@@ -152,12 +152,12 @@ export function HabitTimer() {
 
                 // Handle timer state updates
                 if (type === "UPDATE") {
-                    // Dodajmy więcej logów do debugowania
+                    // Add more debug logs
                     console.log(
                         `[MAIN][DEBUG] Timer state change: wasRunning=${wasRunningRef.current}, isNowRunning=${payload.isRunning}`
                     );
 
-                    // Sprawdź, czy interwał się zakończył (reset do pełnej wartości lub koniec sesji)
+                    // Check if interval has ended (reset to full value or session end)
                     const isIntervalReset =
                         prevIntervalTimeLeftRef.current !== null &&
                         prevIntervalTimeLeftRef.current <= 1 &&
@@ -169,7 +169,7 @@ export function HabitTimer() {
                         prevSessionTimeLeftRef.current > 0 &&
                         payload.sessionTimeLeft === 0;
 
-                    // Sprawdź, czy sesja się zakończyła
+                    // Check if session has ended
                     if (
                         isSessionEnd &&
                         !sessionRegisteredRef.current &&
@@ -182,7 +182,7 @@ export function HabitTimer() {
                         sessionRegisteredRef.current = true;
                     }
 
-                    // Jeśli sesja została zresetowana (nowa sesja), zresetuj flagę rejestracji sesji
+                    // If session was reset (new session), reset session registration flag
                     if (
                         payload.sessionTimeLeft ===
                             settingsRef.current?.sessionDuration &&
@@ -192,7 +192,7 @@ export function HabitTimer() {
                         sessionRegisteredRef.current = false;
                     }
 
-                    // Sprawdź, czy interwał się zakończył - dodajemy warunek !isManualResetRef.current
+                    // Check if interval has ended - adding condition !isManualResetRef.current
                     if (
                         (isIntervalReset ||
                             (isSessionEnd && payload.intervalTimeLeft === 0)) &&
@@ -208,14 +208,14 @@ export function HabitTimer() {
                         registerInterval();
                     }
 
-                    // Resetujemy flagę ręcznego resetu po przetworzeniu aktualizacji
+                    // Reset manual reset flag after processing update
                     isManualResetRef.current = false;
 
-                    // Zapisz aktualne wartości do porównania przy następnej aktualizacji
+                    // Save current values for comparison at next update
                     prevIntervalTimeLeftRef.current = payload.intervalTimeLeft;
                     prevSessionTimeLeftRef.current = payload.sessionTimeLeft;
 
-                    // Aktualizuj ref śledzący stan timera
+                    // Update ref tracking timer state
                     wasRunningRef.current = payload.isRunning;
 
                     // Update timer state reference
@@ -250,9 +250,9 @@ export function HabitTimer() {
     const resetTimer = useCallback(() => {
         if (workerRef.current) {
             console.log("[MAIN][04] Sending RESET to worker");
-            // Ustawiamy flagę ręcznego resetu
+            // Set manual reset flag
             isManualResetRef.current = true;
-            // Resetujemy flagę rejestracji sesji
+            // Reset session registration flag
             sessionRegisteredRef.current = false;
             workerRef.current.postMessage({ type: "RESET" });
         }
@@ -280,9 +280,9 @@ export function HabitTimer() {
             // Send to worker
             // The worker will update the settings in IndexedDB
             if (workerRef.current) {
-                // Ustawiamy flagę ręcznego resetu
+                // Set manual reset flag
                 isManualResetRef.current = true;
-                // Resetujemy flagę rejestracji sesji
+                // Reset session registration flag
                 sessionRegisteredRef.current = false;
                 workerRef.current.postMessage({
                     type: "UPDATE_SETTINGS",
@@ -320,7 +320,7 @@ export function HabitTimer() {
         const command = timerStateRef.current.isRunning ? "PAUSE" : "START";
         console.log(`[MAIN][07] Sending ${command} to worker`);
 
-        // Jeśli pauzujemy timer, zarejestruj pauzę
+        // If pausing timer, register pause
         if (command === "PAUSE") {
             console.log(
                 "[MAIN][DEBUG] Pause button clicked, registering pause"
@@ -410,7 +410,7 @@ export function HabitTimer() {
                     onOpenSettings={handleSettingsOpen}
                 />
 
-                {/* Settings Dialog - ukryty, otwierany z menu */}
+                {/* Settings Dialog - hidden, opened from menu */}
                 <TimerSettingsDialog
                     sessionDuration={sessionDurationTime}
                     intervalDuration={intervalDurationTime}

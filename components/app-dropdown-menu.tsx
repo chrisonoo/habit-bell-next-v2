@@ -45,27 +45,27 @@ export function AppDropdownMenu({
         useActivityContext();
     const [isOpen, setIsOpen] = useState(false);
 
-    // Funkcja do obsługi kliknięcia w opcję menu
+    // Function to handle menu item click
     const handleMenuItemClick = (action: () => void) => {
-        // Zamknij menu
+        // Close menu
         setIsOpen(false);
-        // Wykonaj akcję
+        // Execute action
         action();
     };
 
-    // Funkcja do obsługi zmiany motywu
+    // Function to handle theme change
     const handleThemeChange = (newTheme: ThemeType) => {
         setTheme(newTheme);
         setIsOpen(false);
     };
 
-    // Funkcja do obsługi zmiany języka
+    // Function to handle language change
     const handleLanguageChange = (newLanguage: LanguageType) => {
         setLanguage(newLanguage);
         setIsOpen(false);
     };
 
-    // Funkcja do wyświetlania nazwy języka
+    // Function to display language name
     const getLanguageName = (lang: LanguageType): string => {
         switch (lang) {
             case "en":
@@ -79,7 +79,7 @@ export function AppDropdownMenu({
         }
     };
 
-    // Funkcja do wyświetlania ikony dla aktualnie wybranego języka
+    // Function to display icon for currently selected language
     const getLanguageIcon = () => {
         switch (language) {
             case "en":
@@ -138,7 +138,7 @@ export function AppDropdownMenu({
 
                 <DropdownMenuSeparator />
 
-                {/* Podmenu wyboru języka */}
+                {/* Language selection submenu */}
                 <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                         <Languages className="mr-2 h-4 w-4" />
@@ -178,7 +178,7 @@ export function AppDropdownMenu({
                     </DropdownMenuPortal>
                 </DropdownMenuSub>
 
-                {/* Podmenu wyboru motywu */}
+                {/* Theme selection submenu */}
                 <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
                         {theme === "light" ? (
