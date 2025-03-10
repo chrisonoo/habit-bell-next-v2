@@ -92,6 +92,9 @@ export function HabitTimer() {
     // Ref do śledzenia poprzedniej wartości intervalTimeLeft
     const prevIntervalTimeLeftRef = useRef<number | null>(null);
 
+    // Ref do śledzenia poprzedniej wartości sessionTimeLeft
+    const prevSessionTimeLeftRef = useRef<number | null>(null);
+
     /**
      * Initialize Web Worker
      * This effect runs once when the component mounts and sets up the worker
@@ -135,21 +138,32 @@ export function HabitTimer() {
                         `[MAIN][DEBUG] Timer state change: wasRunning=${wasRunningRef.current}, isNowRunning=${payload.isRunning}`
                     );
 
-                    // Sprawdź, czy interwał się zakończył (reset do pełnej wartości)
-                    if (
+                    // Sprawdź, czy interwał się zakończył (reset do pełnej wartości lub koniec sesji)
+                    const isIntervalReset =
                         prevIntervalTimeLeftRef.current !== null &&
                         prevIntervalTimeLeftRef.current <= 1 &&
                         payload.intervalTimeLeft ===
-                            settingsRef.current?.intervalDuration
-                    ) {
+                            settingsRef.current?.intervalDuration;
+
+                    const isSessionEnd =
+                        prevSessionTimeLeftRef.current !== null &&
+                        prevSessionTimeLeftRef.current > 0 &&
+                        payload.sessionTimeLeft === 0 &&
+                        payload.intervalTimeLeft === 0;
+
+                    if (isIntervalReset || isSessionEnd) {
                         console.log(
-                            "[MAIN][DEBUG] Interval completed, registering interval"
+                            "[MAIN][DEBUG] Interval completed, registering interval. Reset:",
+                            isIntervalReset,
+                            "Session end:",
+                            isSessionEnd
                         );
                         registerInterval();
                     }
 
-                    // Zapisz aktualną wartość intervalTimeLeft do porównania przy następnej aktualizacji
+                    // Zapisz aktualne wartości do porównania przy następnej aktualizacji
                     prevIntervalTimeLeftRef.current = payload.intervalTimeLeft;
+                    prevSessionTimeLeftRef.current = payload.sessionTimeLeft;
 
                     // Aktualizuj ref śledzący stan timera
                     wasRunningRef.current = payload.isRunning;
