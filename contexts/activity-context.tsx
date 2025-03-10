@@ -16,6 +16,14 @@ export interface ActivityRecord {
     date: string; // Format YYYY-MM-DD dla łatwiejszego grupowania
 }
 
+// Add the DailyStats interface after the ActivityRecord interface
+export interface DailyStats {
+    date: string;
+    sessions: number;
+    intervals: number;
+    pauses: number;
+}
+
 // Interfejs dla kontekstu aktywności
 interface ActivityContextType {
     pauseCount: number;
@@ -27,6 +35,7 @@ interface ActivityContextType {
     registerPause: () => void;
     registerInterval: () => void;
     registerSession: () => void;
+    getActivityStats: () => Promise<DailyStats[]>;
 }
 
 // Domyślne wartości dla kontekstu
@@ -40,6 +49,7 @@ const defaultContext: ActivityContextType = {
     registerPause: () => {},
     registerInterval: () => {},
     registerSession: () => {},
+    getActivityStats: async () => [],
 };
 
 // Utworzenie kontekstu
@@ -69,7 +79,10 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
 
     // Funkcja pomocnicza do formatowania daty w formacie YYYY-MM-DD
     const formatDate = (date: Date): string => {
-        return date.toISOString().split("T")[0];
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
     };
 
     // Funkcja do otwierania bazy danych
@@ -121,6 +134,82 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
                 reject((event.target as IDBOpenDBRequest).error);
             };
         });
+    };
+
+    // Add the getActivityStats function to the ActivityProvider
+    // Add this function inside the ActivityProvider component before the value declaration
+    const getActivityStats = async (): Promise<DailyStats[]> => {
+        try {
+            console.log("[ACTIVITY][DEBUG] Getting activity statistics");
+
+            const db = await openDatabase();
+            const transaction = db.transaction("activities", "readonly");
+            const store = transaction.objectStore("activities");
+
+            // Get all activities
+            return new Promise((resolve, reject) => {
+                const request = store.getAll();
+
+                request.onsuccess = () => {
+                    const activities = request.result;
+
+                    // Group activities by date
+                    const groupedByDate = activities.reduce(
+                        (acc: { [key: string]: DailyStats }, activity) => {
+                            const { date, type } = activity;
+
+                            if (!acc[date]) {
+                                acc[date] = {
+                                    date,
+                                    sessions: 0,
+                                    intervals: 0,
+                                    pauses: 0,
+                                };
+                            }
+
+                            // Increment the appropriate counter
+                            switch (type) {
+                                case "session":
+                                    acc[date].sessions++;
+                                    break;
+                                case "interval":
+                                    acc[date].intervals++;
+                                    break;
+                                case "pause":
+                                    acc[date].pauses++;
+                                    break;
+                            }
+
+                            return acc;
+                        },
+                        {}
+                    );
+
+                    // Convert the grouped data to an array
+                    const stats = Object.values(groupedByDate);
+                    console.log("[ACTIVITY][DEBUG] Collected stats:", stats);
+                    resolve(stats);
+                };
+
+                request.onerror = (event) => {
+                    console.error(
+                        "[ACTIVITY][DEBUG] Error getting activities:",
+                        event
+                    );
+                    reject(event);
+                };
+
+                transaction.oncomplete = () => {
+                    db.close();
+                };
+            });
+        } catch (error) {
+            console.error(
+                "[ACTIVITY][DEBUG] Error getting activity stats:",
+                error
+            );
+            return [];
+        }
     };
 
     // Funkcja do rejestrowania nowej aktywności (pauzy, interwału lub sesji)
@@ -291,7 +380,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
         loadActivityCounts();
     }, []);
 
-    // Wartość kontekstu
+    // Update the context value to include the new function
     const value = {
         pauseCount,
         todayPauseCount,
@@ -302,6 +391,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
         registerPause,
         registerInterval,
         registerSession,
+        getActivityStats,
     };
 
     return (
