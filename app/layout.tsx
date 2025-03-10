@@ -2,7 +2,7 @@ import type React from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { PauseProvider } from "@/contexts/pause-context";
+import { ActivityProvider } from "@/contexts/activity-context";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,7 +20,7 @@ export default function RootLayout({
     return (
         <html lang="en">
             <body className={inter.className}>
-                <PauseProvider>{children}</PauseProvider>
+                <ActivityProvider>{children}</ActivityProvider>
             </body>
         </html>
     );

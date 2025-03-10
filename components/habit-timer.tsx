@@ -9,7 +9,7 @@ import { formatTime } from "@/services/time-service";
 import { TimerReset, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Statistics } from "@/components/statistics";
-import { usePauseContext } from "@/contexts/pause-context";
+import { useActivityContext } from "@/contexts/activity-context";
 
 /**
  * Interface for timer state managed by worker
@@ -54,11 +54,12 @@ interface TimeValue {
  * @returns {JSX.Element} The rendered component
  */
 export function HabitTimer() {
-    // Pobierz funkcję do rejestrowania pauz z kontekstu
-    const { registerPause } = usePauseContext();
+    // Pobierz funkcje do rejestrowania aktywności z kontekstu
+    const { registerPause, registerInterval } = useActivityContext();
     console.log(
-        "[MAIN][DEBUG] registerPause function available:",
-        !!registerPause
+        "[MAIN][DEBUG] Activity functions available:",
+        !!registerPause,
+        !!registerInterval
     );
 
     // Reference to store timer state from worker - without default values
@@ -87,6 +88,9 @@ export function HabitTimer() {
 
     // Ref do śledzenia poprzedniego stanu timera (czy był uruchomiony)
     const wasRunningRef = useRef(false);
+
+    // Ref do śledzenia poprzedniej wartości intervalTimeLeft
+    const prevIntervalTimeLeftRef = useRef<number | null>(null);
 
     /**
      * Initialize Web Worker
@@ -131,6 +135,22 @@ export function HabitTimer() {
                         `[MAIN][DEBUG] Timer state change: wasRunning=${wasRunningRef.current}, isNowRunning=${payload.isRunning}`
                     );
 
+                    // Sprawdź, czy interwał się zakończył (reset do pełnej wartości)
+                    if (
+                        prevIntervalTimeLeftRef.current !== null &&
+                        prevIntervalTimeLeftRef.current <= 1 &&
+                        payload.intervalTimeLeft ===
+                            settingsRef.current?.intervalDuration
+                    ) {
+                        console.log(
+                            "[MAIN][DEBUG] Interval completed, registering interval"
+                        );
+                        registerInterval();
+                    }
+
+                    // Zapisz aktualną wartość intervalTimeLeft do porównania przy następnej aktualizacji
+                    prevIntervalTimeLeftRef.current = payload.intervalTimeLeft;
+
                     // Aktualizuj ref śledzący stan timera
                     wasRunningRef.current = payload.isRunning;
 
@@ -157,7 +177,7 @@ export function HabitTimer() {
                 workerRef.current.postMessage({ type: "GET_INITIAL_SETTINGS" });
             }
         }
-    }, []); // Empty dependency array ensures this runs only once
+    }, [registerInterval]); // Dodajemy registerInterval do zależności
 
     /**
      * Reset timer to initial state

@@ -2,27 +2,34 @@
 
 import { Button } from "@/components/ui/button";
 import { CircleDollarSign, CirclePause, Flag } from "lucide-react";
-import { usePauseContext } from "@/contexts/pause-context";
+import { useActivityContext } from "@/contexts/activity-context";
 import { useEffect } from "react";
 
 /**
  * Statistics Component
  *
- * Wyświetla statystyki aplikacji, w tym liczbę pauz.
+ * Wyświetla statystyki aplikacji, w tym liczbę pauz i interwałów.
  *
  * @returns {JSX.Element} The rendered component
  */
 export function Statistics() {
-    // Pobierz liczbę pauz z kontekstu
-    const { todayPauseCount } = usePauseContext();
+    // Pobierz liczby pauz i interwałów z kontekstu
+    const { todayPauseCount, todayIntervalCount } = useActivityContext();
 
-    // Dodajmy efekt, który będzie logował zmiany liczby pauz
+    // Dodajmy efekt, który będzie logował zmiany liczby pauz i interwałów
     useEffect(() => {
         console.log(
             "[STATISTICS][DEBUG] Today's pause count updated:",
             todayPauseCount
         );
     }, [todayPauseCount]);
+
+    useEffect(() => {
+        console.log(
+            "[STATISTICS][DEBUG] Today's interval count updated:",
+            todayIntervalCount
+        );
+    }, [todayIntervalCount]);
 
     return (
         <div className="absolute top-4 left-4 z-10 flex gap-3 items-center">
@@ -36,7 +43,7 @@ export function Statistics() {
                     <CircleDollarSign className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
                     <span className="sr-only">Reset timer</span>
                 </Button>
-                <div className="text-xl lg:text-2xl">2</div>
+                <div className="text-xl lg:text-2xl">0</div>
             </div>
 
             {/* Interval Counter Button */}
@@ -47,9 +54,9 @@ export function Statistics() {
                     className="h-10 w-10 lg:h-14 lg:w-14"
                 >
                     <Flag className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
-                    <span className="sr-only">Reset timer</span>
+                    <span className="sr-only">Interval counter</span>
                 </Button>
-                <div className="text-xl lg:text-2xl">2</div>
+                <div className="text-xl lg:text-2xl">{todayIntervalCount}</div>
             </div>
 
             {/* Pause Counter Button */}
