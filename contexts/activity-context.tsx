@@ -24,7 +24,7 @@ export interface DailyStats {
     pauses: number;
 }
 
-// Interface for activity context
+// Zaktualizuj interfejs ActivityContextType, dodając funkcję resetActivityStats
 interface ActivityContextType {
     pauseCount: number;
     todayPauseCount: number;
@@ -36,9 +36,10 @@ interface ActivityContextType {
     registerInterval: () => void;
     registerSession: () => void;
     getActivityStats: () => Promise<DailyStats[]>;
+    resetActivityStats: () => Promise<boolean>; // Dodana nowa funkcja
 }
 
-// Default values for context
+// Zaktualizuj defaultContext, dodając pustą implementację resetActivityStats
 const defaultContext: ActivityContextType = {
     pauseCount: 0,
     todayPauseCount: 0,
@@ -50,6 +51,7 @@ const defaultContext: ActivityContextType = {
     registerInterval: () => {},
     registerSession: () => {},
     getActivityStats: async () => [],
+    resetActivityStats: async () => false, // Dodana nowa funkcja
 };
 
 // Create context
@@ -209,6 +211,57 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
                 error
             );
             return [];
+        }
+    };
+
+    // Dodaj implementację funkcji resetActivityStats w komponencie ActivityProvider
+    // Dodaj tę funkcję przed deklaracją value
+    const resetActivityStats = async (): Promise<boolean> => {
+        try {
+            console.log("[ACTIVITY][DEBUG] Resetting all activity statistics");
+
+            const db = await openDatabase();
+            const transaction = db.transaction("activities", "readwrite");
+            const store = transaction.objectStore("activities");
+
+            // Usuń wszystkie rekordy aktywności
+            return new Promise((resolve, reject) => {
+                const request = store.clear();
+
+                request.onsuccess = () => {
+                    console.log(
+                        "[ACTIVITY][DEBUG] All activity statistics cleared successfully"
+                    );
+
+                    // Zresetuj liczniki
+                    setPauseCount(0);
+                    setTodayPauseCount(0);
+                    setIntervalCount(0);
+                    setTodayIntervalCount(0);
+                    setSessionCount(0);
+                    setTodaySessionCount(0);
+
+                    resolve(true);
+                };
+
+                request.onerror = (event) => {
+                    console.error(
+                        "[ACTIVITY][DEBUG] Error clearing activity statistics:",
+                        event
+                    );
+                    reject(false);
+                };
+
+                transaction.oncomplete = () => {
+                    db.close();
+                };
+            });
+        } catch (error) {
+            console.error(
+                "[ACTIVITY][DEBUG] Error resetting activity stats:",
+                error
+            );
+            return false;
         }
     };
 
@@ -380,7 +433,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
         loadActivityCounts();
     }, []);
 
-    // Update the context value to include the new function
+    // Zaktualizuj obiekt value, dodając funkcję resetActivityStats
     const value = {
         pauseCount,
         todayPauseCount,
@@ -392,6 +445,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
         registerInterval,
         registerSession,
         getActivityStats,
+        resetActivityStats, // Dodana nowa funkcja
     };
 
     return (
