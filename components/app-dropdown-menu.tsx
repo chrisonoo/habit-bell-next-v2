@@ -75,7 +75,7 @@ export function AppDropdownMenu({
             case "no":
                 return "Norsk";
             default:
-                return "Unknown";
+                return "English";
         }
     };
 
@@ -89,7 +89,7 @@ export function AppDropdownMenu({
             case "no":
                 return "🇳🇴";
             default:
-                return "🌐";
+                return "🇬🇧";
         }
     };
 
@@ -106,7 +106,7 @@ export function AppDropdownMenu({
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-                className="w-56 max-h-[calc(100vh-4rem)] overflow-y-auto"
+                className="w-56 max-h-[calc(100vh-4rem)] overflow-y-auto bg-background border border-border shadow-lg"
                 align="end"
             >
                 <DropdownMenuGroup>
@@ -146,7 +146,7 @@ export function AppDropdownMenu({
                         <span className="ml-auto">{getLanguageIcon()}</span>
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
-                        <DropdownMenuSubContent>
+                        <DropdownMenuSubContent className="bg-background border border-border shadow-lg">
                             <DropdownMenuItem
                                 onClick={() => handleLanguageChange("en")}
                             >
@@ -189,7 +189,7 @@ export function AppDropdownMenu({
                         <span>Theme</span>
                     </DropdownMenuSubTrigger>
                     <DropdownMenuPortal>
-                        <DropdownMenuSubContent>
+                        <DropdownMenuSubContent className="bg-background border border-border shadow-lg">
                             <DropdownMenuItem
                                 onClick={() => handleThemeChange("light")}
                             >
