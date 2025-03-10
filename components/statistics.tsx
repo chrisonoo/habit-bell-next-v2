@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { CircleDollarSign, CirclePause, Flag } from "lucide-react";
 import { usePauseContext } from "@/contexts/pause-context";
+import { useEffect } from "react";
 
 /**
  * Statistics Component
@@ -14,6 +15,14 @@ import { usePauseContext } from "@/contexts/pause-context";
 export function Statistics() {
     // Pobierz liczbę pauz z kontekstu
     const { todayPauseCount } = usePauseContext();
+
+    // Dodajmy efekt, który będzie logował zmiany liczby pauz
+    useEffect(() => {
+        console.log(
+            "[STATISTICS][DEBUG] Today's pause count updated:",
+            todayPauseCount
+        );
+    }, [todayPauseCount]);
 
     return (
         <div className="absolute top-4 left-4 z-10 flex gap-3 items-center">

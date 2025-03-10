@@ -51,77 +51,150 @@ export function PauseProvider({ children }: PauseProviderProps) {
         return date.toISOString().split("T")[0];
     };
 
+    // Zmieńmy funkcję registerPause, aby używała bezpośrednio IndexedDB zamiast workera:
+
     // Funkcja do rejestrowania nowej pauzy
     const registerPause = async () => {
         try {
+            console.log("[PAUSE][DEBUG] Registering new pause");
             const now = new Date();
             const pauseRecord: PauseRecord = {
                 timestamp: now.getTime(),
                 date: formatDate(now),
             };
 
-            // Zapisz pauzę w IndexedDB za pomocą Web Worker
-            if (typeof window !== "undefined") {
-                const worker = new Worker("/workers/pause-worker.js");
+            // Otwórz bazę danych
+            const request = indexedDB.open("habit-bell-db", 2);
 
-                worker.onmessage = (e) => {
-                    const { type, payload } = e.data;
+            request.onupgradeneeded = (event) => {
+                const db = (event.target as IDBOpenDBRequest).result;
 
-                    if (type === "PAUSE_SAVED") {
-                        console.log("[PAUSE] Pause saved successfully");
-                        // Aktualizuj liczniki pauz
-                        setPauseCount((prev) => prev + 1);
-                        setTodayPauseCount((prev) => prev + 1);
-                    } else if (type === "ERROR") {
-                        console.error("[PAUSE] Error saving pause:", payload);
-                    }
+                // Sprawdź, czy store pauz już istnieje
+                if (!db.objectStoreNames.contains("pauses")) {
+                    // Utwórz nowy store dla pauz z auto-inkrementowanym kluczem
+                    const pauseStore = db.createObjectStore("pauses", {
+                        keyPath: "id",
+                        autoIncrement: true,
+                    });
 
-                    // Zakończ działanie workera po wykonaniu operacji
-                    worker.terminate();
+                    // Dodaj indeks dla daty, aby ułatwić wyszukiwanie pauz z danego dnia
+                    pauseStore.createIndex("date", "date", { unique: false });
+
+                    console.log("[PAUSE][DEBUG] Created pauses store");
+                }
+            };
+
+            request.onsuccess = (event) => {
+                const db = (event.target as IDBOpenDBRequest).result;
+                const transaction = db.transaction("pauses", "readwrite");
+                const store = transaction.objectStore("pauses");
+
+                const addRequest = store.add(pauseRecord);
+
+                addRequest.onsuccess = () => {
+                    console.log("[PAUSE][DEBUG] Pause saved successfully");
+                    // Aktualizuj liczniki pauz
+                    setPauseCount((prev) => prev + 1);
+                    setTodayPauseCount((prev) => prev + 1);
                 };
 
-                worker.postMessage({
-                    type: "SAVE_PAUSE",
-                    payload: pauseRecord,
-                });
-            }
+                addRequest.onerror = (event) => {
+                    console.error("[PAUSE][DEBUG] Error saving pause:", event);
+                };
+
+                transaction.oncomplete = () => {
+                    db.close();
+                };
+            };
+
+            request.onerror = (event) => {
+                console.error("[PAUSE][DEBUG] Error opening database:", event);
+            };
         } catch (error) {
-            console.error("[PAUSE] Error registering pause:", error);
+            console.error("[PAUSE][DEBUG] Error registering pause:", error);
         }
     };
+
+    // Zmieńmy również funkcję loadPauseCounts, aby używała bezpośrednio IndexedDB:
 
     // Efekt do ładowania liczby pauz przy inicjalizacji
     useEffect(() => {
         const loadPauseCounts = async () => {
             try {
-                if (typeof window !== "undefined") {
-                    const worker = new Worker("/workers/pause-worker.js");
+                console.log("[PAUSE][DEBUG] Loading pause counts");
 
-                    worker.onmessage = (e) => {
-                        const { type, payload } = e.data;
+                // Otwórz bazę danych
+                const request = indexedDB.open("habit-bell-db", 2);
 
-                        if (type === "PAUSE_COUNTS") {
+                request.onupgradeneeded = (event) => {
+                    const db = (event.target as IDBOpenDBRequest).result;
+
+                    // Sprawdź, czy store pauz już istnieje
+                    if (!db.objectStoreNames.contains("pauses")) {
+                        // Utwórz nowy store dla pauz z auto-inkrementowanym kluczem
+                        const pauseStore = db.createObjectStore("pauses", {
+                            keyPath: "id",
+                            autoIncrement: true,
+                        });
+
+                        // Dodaj indeks dla daty, aby ułatwić wyszukiwanie pauz z danego dnia
+                        pauseStore.createIndex("date", "date", {
+                            unique: false,
+                        });
+
+                        console.log("[PAUSE][DEBUG] Created pauses store");
+                    }
+                };
+
+                request.onsuccess = (event) => {
+                    const db = (event.target as IDBOpenDBRequest).result;
+                    const transaction = db.transaction("pauses", "readonly");
+                    const store = transaction.objectStore("pauses");
+
+                    // Pobierz całkowitą liczbę pauz
+                    const countRequest = store.count();
+
+                    countRequest.onsuccess = () => {
+                        const totalCount = countRequest.result;
+                        console.log(
+                            "[PAUSE][DEBUG] Total pause count:",
+                            totalCount
+                        );
+                        setPauseCount(totalCount);
+
+                        // Pobierz liczbę pauz z dzisiejszego dnia
+                        const today = formatDate(new Date());
+                        const index = store.index("date");
+                        const todayCountRequest = index.count(
+                            IDBKeyRange.only(today)
+                        );
+
+                        todayCountRequest.onsuccess = () => {
+                            const todayCount = todayCountRequest.result;
                             console.log(
-                                "[PAUSE] Pause counts loaded:",
-                                payload
+                                "[PAUSE][DEBUG] Today's pause count:",
+                                todayCount
                             );
-                            setPauseCount(payload.totalCount);
-                            setTodayPauseCount(payload.todayCount);
-                        } else if (type === "ERROR") {
-                            console.error(
-                                "[PAUSE] Error loading pause counts:",
-                                payload
-                            );
-                        }
-
-                        // Zakończ działanie workera po wykonaniu operacji
-                        worker.terminate();
+                            setTodayPauseCount(todayCount);
+                        };
                     };
 
-                    worker.postMessage({ type: "GET_PAUSE_COUNTS" });
-                }
+                    transaction.oncomplete = () => {
+                        db.close();
+                    };
+                };
+
+                request.onerror = (event) => {
+                    console.error(
+                        "[PAUSE][DEBUG] Error opening database:",
+                        event
+                    );
+                };
             } catch (error) {
-                console.error("[PAUSE] Error loading pause counts:", error);
+                console.error(
+                    "[PAUSE][DEBUG] Error loading pause counts:",
+                    error
+                );
             }
         };
 

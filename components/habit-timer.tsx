@@ -54,6 +54,13 @@ interface TimeValue {
  * @returns {JSX.Element} The rendered component
  */
 export function HabitTimer() {
+    // Pobierz funkcję do rejestrowania pauz z kontekstu
+    const { registerPause } = usePauseContext();
+    console.log(
+        "[MAIN][DEBUG] registerPause function available:",
+        !!registerPause
+    );
+
     // Reference to store timer state from worker - without default values
     // Using a ref instead of state prevents unnecessary re-renders and race conditions
     const timerStateRef = useRef<TimerState | null>(null);
@@ -77,9 +84,6 @@ export function HabitTimer() {
     // Add forceUpdate function
     // This is used to trigger re-renders when ref values change
     const forceUpdate = useReducer((x) => x + 1, 0)[1];
-
-    // Pobierz funkcję do rejestrowania pauz z kontekstu
-    const { registerPause } = usePauseContext();
 
     // Ref do śledzenia poprzedniego stanu timera (czy był uruchomiony)
     const wasRunningRef = useRef(false);
@@ -122,12 +126,18 @@ export function HabitTimer() {
 
                 // Handle timer state updates
                 if (type === "UPDATE") {
+                    // Dodajmy więcej logów do debugowania
+                    console.log(
+                        `[MAIN][DEBUG] Timer state change: wasRunning=${wasRunningRef.current}, isNowRunning=${payload.isRunning}`
+                    );
+
+                    // USUWAMY TO WYWOŁANIE - to jest jedno z dwóch miejsc, gdzie registerPause() jest wywoływane
                     // Sprawdź, czy timer został zatrzymany (pauza)
-                    if (wasRunningRef.current && !payload.isRunning) {
-                        // Timer został zatrzymany - zarejestruj pauzę
-                        registerPause();
-                        console.log("[MAIN] Pause registered");
-                    }
+                    // if (wasRunningRef.current && !payload.isRunning) {
+                    //   // Timer został zatrzymany - zarejestruj pauzę
+                    //   console.log("[MAIN][DEBUG] Pause detected, registering pause")
+                    //   registerPause()
+                    // }
 
                     // Aktualizuj ref śledzący stan timera
                     wasRunningRef.current = payload.isRunning;
@@ -224,8 +234,18 @@ export function HabitTimer() {
 
         const command = timerStateRef.current.isRunning ? "PAUSE" : "START";
         console.log(`[MAIN][07] Sending ${command} to worker`);
+
+        // Jeśli pauzujemy timer, zarejestruj pauzę
+        // ZOSTAWIAMY TO WYWOŁANIE - to jest drugie miejsce, gdzie registerPause() jest wywoływane
+        if (command === "PAUSE") {
+            console.log(
+                "[MAIN][DEBUG] Pause button clicked, registering pause"
+            );
+            registerPause();
+        }
+
         workerRef.current.postMessage({ type: command });
-    }, []);
+    }, [registerPause]);
 
     /**
      * Toggle fullscreen
