@@ -8,15 +8,16 @@ import { useEffect } from "react";
 /**
  * Statistics Component
  *
- * Wyświetla statystyki aplikacji, w tym liczbę pauz i interwałów.
+ * Wyświetla statystyki aplikacji, w tym liczbę pauz, interwałów i sesji.
  *
  * @returns {JSX.Element} The rendered component
  */
 export function Statistics() {
-    // Pobierz liczby pauz i interwałów z kontekstu
-    const { todayPauseCount, todayIntervalCount } = useActivityContext();
+    // Pobierz liczby pauz, interwałów i sesji z kontekstu
+    const { todayPauseCount, todayIntervalCount, todaySessionCount } =
+        useActivityContext();
 
-    // Dodajmy efekt, który będzie logował zmiany liczby pauz i interwałów
+    // Dodajmy efekt, który będzie logował zmiany liczby aktywności
     useEffect(() => {
         console.log(
             "[STATISTICS][DEBUG] Today's pause count updated:",
@@ -31,9 +32,16 @@ export function Statistics() {
         );
     }, [todayIntervalCount]);
 
+    useEffect(() => {
+        console.log(
+            "[STATISTICS][DEBUG] Today's session count updated:",
+            todaySessionCount
+        );
+    }, [todaySessionCount]);
+
     return (
         <div className="absolute top-4 left-4 z-10 flex gap-3 items-center">
-            {/* Coins Counter Button */}
+            {/* Session Counter Button */}
             <div className="flex gap-1 items-center">
                 <Button
                     variant="ghost"
@@ -41,9 +49,9 @@ export function Statistics() {
                     className="h-10 w-10 lg:h-14 lg:w-14"
                 >
                     <CircleDollarSign className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
-                    <span className="sr-only">Reset timer</span>
+                    <span className="sr-only">Session counter</span>
                 </Button>
-                <div className="text-xl lg:text-2xl">0</div>
+                <div className="text-xl lg:text-2xl">{todaySessionCount}</div>
             </div>
 
             {/* Interval Counter Button */}

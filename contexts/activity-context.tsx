@@ -8,10 +8,10 @@ import {
     type ReactNode,
 } from "react";
 
-// Interfejs dla pojedynczej aktywności (pauza lub interwał)
+// Interfejs dla pojedynczej aktywności (pauza, interwał lub sesja)
 export interface ActivityRecord {
     id?: number;
-    type: "pause" | "interval"; // Typ aktywności
+    type: "pause" | "interval" | "session"; // Typ aktywności
     timestamp: number; // Unix timestamp
     date: string; // Format YYYY-MM-DD dla łatwiejszego grupowania
 }
@@ -22,8 +22,11 @@ interface ActivityContextType {
     todayPauseCount: number;
     intervalCount: number;
     todayIntervalCount: number;
+    sessionCount: number;
+    todaySessionCount: number;
     registerPause: () => void;
     registerInterval: () => void;
+    registerSession: () => void;
 }
 
 // Domyślne wartości dla kontekstu
@@ -32,8 +35,11 @@ const defaultContext: ActivityContextType = {
     todayPauseCount: 0,
     intervalCount: 0,
     todayIntervalCount: 0,
+    sessionCount: 0,
+    todaySessionCount: 0,
     registerPause: () => {},
     registerInterval: () => {},
+    registerSession: () => {},
 };
 
 // Utworzenie kontekstu
@@ -56,6 +62,10 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
     // Stan dla liczby wszystkich interwałów i interwałów z dzisiejszego dnia
     const [intervalCount, setIntervalCount] = useState(0);
     const [todayIntervalCount, setTodayIntervalCount] = useState(0);
+
+    // Stan dla liczby wszystkich sesji i sesji z dzisiejszego dnia
+    const [sessionCount, setSessionCount] = useState(0);
+    const [todaySessionCount, setTodaySessionCount] = useState(0);
 
     // Funkcja pomocnicza do formatowania daty w formacie YYYY-MM-DD
     const formatDate = (date: Date): string => {
@@ -113,8 +123,8 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
         });
     };
 
-    // Funkcja do rejestrowania nowej aktywności (pauzy lub interwału)
-    const registerActivity = async (type: "pause" | "interval") => {
+    // Funkcja do rejestrowania nowej aktywności (pauzy, interwału lub sesji)
+    const registerActivity = async (type: "pause" | "interval" | "session") => {
         try {
             console.log(`[ACTIVITY][DEBUG] Registering new ${type}`);
             const now = new Date();
@@ -140,6 +150,9 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
                 } else if (type === "interval") {
                     setIntervalCount((prev) => prev + 1);
                     setTodayIntervalCount((prev) => prev + 1);
+                } else if (type === "session") {
+                    setSessionCount((prev) => prev + 1);
+                    setTodaySessionCount((prev) => prev + 1);
                 }
             };
 
@@ -161,6 +174,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
     // Funkcje do rejestrowania konkretnych typów aktywności
     const registerPause = () => registerActivity("pause");
     const registerInterval = () => registerActivity("interval");
+    const registerSession = () => registerActivity("session");
 
     // Efekt do ładowania liczby aktywności przy inicjalizacji
     useEffect(() => {
@@ -233,6 +247,36 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
                     };
                 };
 
+                // Pobierz całkowitą liczbę sesji
+                const sessionCountRequest = typeIndex.count(
+                    IDBKeyRange.only("session")
+                );
+
+                sessionCountRequest.onsuccess = () => {
+                    const totalSessionCount = sessionCountRequest.result;
+                    console.log(
+                        "[ACTIVITY][DEBUG] Total session count:",
+                        totalSessionCount
+                    );
+                    setSessionCount(totalSessionCount);
+
+                    // Pobierz liczbę sesji z dzisiejszego dnia
+                    const typeDateIndex = store.index("type_date");
+                    const todaySessionCountRequest = typeDateIndex.count(
+                        IDBKeyRange.only(["session", today])
+                    );
+
+                    todaySessionCountRequest.onsuccess = () => {
+                        const todaySessionCount =
+                            todaySessionCountRequest.result;
+                        console.log(
+                            "[ACTIVITY][DEBUG] Today's session count:",
+                            todaySessionCount
+                        );
+                        setTodaySessionCount(todaySessionCount);
+                    };
+                };
+
                 transaction.oncomplete = () => {
                     db.close();
                 };
@@ -253,8 +297,11 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
         todayPauseCount,
         intervalCount,
         todayIntervalCount,
+        sessionCount,
+        todaySessionCount,
         registerPause,
         registerInterval,
+        registerSession,
     };
 
     return (

@@ -55,11 +55,13 @@ interface TimeValue {
  */
 export function HabitTimer() {
     // Pobierz funkcje do rejestrowania aktywności z kontekstu
-    const { registerPause, registerInterval } = useActivityContext();
+    const { registerPause, registerInterval, registerSession } =
+        useActivityContext();
     console.log(
         "[MAIN][DEBUG] Activity functions available:",
         !!registerPause,
-        !!registerInterval
+        !!registerInterval,
+        !!registerSession
     );
 
     // Reference to store timer state from worker - without default values
@@ -94,6 +96,9 @@ export function HabitTimer() {
 
     // Ref do śledzenia poprzedniej wartości sessionTimeLeft
     const prevSessionTimeLeftRef = useRef<number | null>(null);
+
+    // Ref do śledzenia, czy sesja została już zarejestrowana
+    const sessionRegisteredRef = useRef(false);
 
     /**
      * Initialize Web Worker
@@ -148,10 +153,37 @@ export function HabitTimer() {
                     const isSessionEnd =
                         prevSessionTimeLeftRef.current !== null &&
                         prevSessionTimeLeftRef.current > 0 &&
-                        payload.sessionTimeLeft === 0 &&
-                        payload.intervalTimeLeft === 0;
+                        payload.sessionTimeLeft === 0;
 
-                    if (isIntervalReset || isSessionEnd) {
+                    // Sprawdź, czy sesja się zakończyła
+                    if (
+                        isSessionEnd &&
+                        !sessionRegisteredRef.current &&
+                        wasRunningRef.current
+                    ) {
+                        console.log(
+                            "[MAIN][DEBUG] Session completed, registering session"
+                        );
+                        registerSession();
+                        sessionRegisteredRef.current = true;
+                    }
+
+                    // Jeśli sesja została zresetowana (nowa sesja), zresetuj flagę rejestracji sesji
+                    if (
+                        payload.sessionTimeLeft ===
+                            settingsRef.current?.sessionDuration &&
+                        prevSessionTimeLeftRef.current !==
+                            settingsRef.current?.sessionDuration
+                    ) {
+                        sessionRegisteredRef.current = false;
+                    }
+
+                    // Sprawdź, czy interwał się zakończył
+                    if (
+                        (isIntervalReset ||
+                            (isSessionEnd && payload.intervalTimeLeft === 0)) &&
+                        wasRunningRef.current
+                    ) {
                         console.log(
                             "[MAIN][DEBUG] Interval completed, registering interval. Reset:",
                             isIntervalReset,
@@ -191,7 +223,7 @@ export function HabitTimer() {
                 workerRef.current.postMessage({ type: "GET_INITIAL_SETTINGS" });
             }
         }
-    }, [registerInterval]); // Dodajemy registerInterval do zależności
+    }, [registerInterval, registerSession]); // Dodajemy registerSession do zależności
 
     /**
      * Reset timer to initial state
@@ -200,6 +232,8 @@ export function HabitTimer() {
     const resetTimer = useCallback(() => {
         if (workerRef.current) {
             console.log("[MAIN][04] Sending RESET to worker");
+            // Resetujemy flagę rejestracji sesji
+            sessionRegisteredRef.current = false;
             workerRef.current.postMessage({ type: "RESET" });
         }
     }, []);
@@ -226,6 +260,8 @@ export function HabitTimer() {
             // Send to worker
             // The worker will update the settings in IndexedDB
             if (workerRef.current) {
+                // Resetujemy flagę rejestracji sesji
+                sessionRegisteredRef.current = false;
                 workerRef.current.postMessage({
                     type: "UPDATE_SETTINGS",
                     payload: {
