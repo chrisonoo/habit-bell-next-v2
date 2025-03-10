@@ -138,7 +138,7 @@ export function StatisticsDialog({
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-full h-[100dvh] sm:h-[100dvh] sm:max-h-[100dvh] sm:max-w-[100vw] p-0 flex flex-col">
+            <DialogContent className="max-w-full h-[100dvh] sm:h-[100dvh] sm:max-h-[100dvh] sm:max-w-[100vw] p-0 flex flex-col rounded-none border-none">
                 <DialogHeader className="p-4 border-b sticky top-0 bg-background z-10 flex-row items-center justify-between">
                     <DialogTitle className="text-xl">
                         Daily Statistics
