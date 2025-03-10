@@ -20,7 +20,7 @@ interface AppSettingsContextType {
     setLanguage: (language: LanguageType) => void;
 }
 
-// Domyślne wartości dla kontekstu
+// Domyślne wartości dla kontekstu - ustawiamy dark jako domyślny
 const defaultContext: AppSettingsContextType = {
     theme: "dark",
     language: "en",
@@ -43,6 +43,7 @@ interface AppSettingsProviderProps {
 // Provider kontekstu ustawień aplikacji
 export function AppSettingsProvider({ children }: AppSettingsProviderProps) {
     // Inicjalizacja stanu z localStorage lub wartości domyślnych
+    // Domyślnie używamy ciemnego motywu
     const [theme, setThemeState] = useState<ThemeType>("dark");
     const [language, setLanguageState] = useState<LanguageType>("en");
 
@@ -62,11 +63,8 @@ export function AppSettingsProvider({ children }: AppSettingsProviderProps) {
             if (savedTheme) {
                 setThemeState(savedTheme);
             } else {
-                // Jeśli nie ma zapisanego motywu, sprawdzamy preferencje systemowe
-                const prefersDark = window.matchMedia(
-                    "(prefers-color-scheme: dark)"
-                ).matches;
-                setThemeState(prefersDark ? "dark" : "light");
+                // Jeśli nie ma zapisanego motywu, używamy ciemnego jako domyślnego
+                setThemeState("dark");
             }
 
             if (savedLanguage) {
