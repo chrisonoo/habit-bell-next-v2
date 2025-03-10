@@ -29,7 +29,6 @@ import {
     type ThemeType,
     type LanguageType,
 } from "@/contexts/app-settings-context";
-import { useActivityContext } from "@/contexts/activity-context";
 
 interface AppDropdownMenuProps {
     onOpenStatistics: () => void;
@@ -41,8 +40,6 @@ export function AppDropdownMenu({
     onOpenSettings,
 }: AppDropdownMenuProps) {
     const { theme, language, setTheme, setLanguage } = useAppSettings();
-    const { todaySessionCount, todayIntervalCount, todayPauseCount } =
-        useActivityContext();
     const [isOpen, setIsOpen] = useState(false);
 
     // Function to handle menu item click
@@ -106,7 +103,7 @@ export function AppDropdownMenu({
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-                className="w-56 max-h-[calc(100vh-4rem)] overflow-y-auto bg-background border border-border shadow-lg"
+                className="w-48 max-h-[calc(100vh-4rem)] overflow-y-auto bg-background border border-border shadow-lg"
                 align="end"
             >
                 <DropdownMenuGroup>
@@ -115,10 +112,6 @@ export function AppDropdownMenu({
                     >
                         <BarChart2 className="mr-2 h-4 w-4" />
                         <span>Statistics</span>
-                        <span className="ml-auto text-xs text-muted-foreground">
-                            {todaySessionCount}/{todayIntervalCount}/
-                            {todayPauseCount}
-                        </span>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                         onClick={() => handleMenuItemClick(onOpenSettings)}
