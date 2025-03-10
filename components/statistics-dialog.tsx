@@ -19,7 +19,6 @@ import {
     useActivityContext,
     type DailyStats,
 } from "@/contexts/activity-context";
-import { cn } from "@/lib/utils";
 
 /**
  * Props for the StatisticsDialog component
@@ -112,7 +111,7 @@ export function StatisticsDialog({
     };
 
     /**
-     * Format a date string to a more readable format
+     * Format a date string to a more readable format using system locale
      * @param {string} dateStr - The date string in YYYY-MM-DD format
      * @returns {string} The formatted date string
      */
@@ -129,39 +128,11 @@ export function StatisticsDialog({
                 return "Invalid date";
             }
 
-            return new Intl.DateTimeFormat(undefined, {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-            }).format(date);
+            // Use system locale for date formatting
+            return date.toLocaleDateString();
         } catch (error) {
             console.error("Error formatting date:", error);
             return "Invalid date";
-        }
-    };
-
-    /**
-     * Check if a date is today
-     * @param {string} dateStr - The date string in YYYY-MM-DD format
-     * @returns {boolean} Whether the date is today
-     */
-    const isToday = (dateStr: string): boolean => {
-        if (!dateStr || !dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
-            return false;
-        }
-
-        try {
-            const today = new Date();
-            const [year, month, day] = dateStr.split("-").map(Number);
-            const date = new Date(year, month - 1, day);
-
-            return (
-                date.getDate() === today.getDate() &&
-                date.getMonth() === today.getMonth() &&
-                date.getFullYear() === today.getFullYear()
-            );
-        } catch (error) {
-            return false;
         }
     };
 
@@ -232,21 +203,11 @@ export function StatisticsDialog({
                             {stats.map((stat) => (
                                 <div
                                     key={stat.date}
-                                    className={cn(
-                                        "grid grid-cols-4 gap-2 py-3 border-b",
-                                        isToday(stat.date) && "bg-primary/5"
-                                    )}
+                                    className="grid grid-cols-4 gap-2 py-3 border-b"
                                 >
                                     <div className="flex items-center">
-                                        <span
-                                            className={cn(
-                                                "text-xs sm:text-sm",
-                                                isToday(stat.date) &&
-                                                    "font-semibold"
-                                            )}
-                                        >
+                                        <span className="text-xs sm:text-sm">
                                             {formatDate(stat.date)}
-                                            {isToday(stat.date) && " (Today)"}
                                         </span>
                                     </div>
                                     <div className="flex items-center justify-center text-xs sm:text-sm">
