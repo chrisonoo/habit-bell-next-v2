@@ -99,3 +99,58 @@ body {
         font-feature-settings: "rlig" 1, "calt" 1;
     }
 }
+
+/* Dodane style dla prose */
+.prose {
+    @apply text-foreground;
+    max-width: 65ch;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4,
+.prose h5,
+.prose h6 {
+    @apply text-foreground font-bold mb-4 mt-8;
+}
+
+.prose h1 {
+    @apply text-3xl;
+}
+
+.prose h2 {
+    @apply text-2xl;
+}
+
+.prose h3 {
+    @apply text-xl;
+}
+
+.prose p {
+    @apply mb-4;
+}
+
+.prose ul {
+    @apply list-disc pl-6 mb-4;
+}
+
+.prose ol {
+    @apply list-decimal pl-6 mb-4;
+}
+
+.prose li {
+    @apply mb-1;
+}
+
+.prose a {
+    @apply text-primary underline;
+}
+
+.dark .prose {
+    @apply text-foreground;
+}
+
+.dark .prose a {
+    @apply text-primary;
+}

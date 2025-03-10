@@ -31,6 +31,7 @@ import {
     type LanguageType,
 } from "@/contexts/app-settings-context";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 
 interface AppDropdownMenuProps {
     onOpenStatistics: () => void;
@@ -43,6 +44,8 @@ export function AppDropdownMenu({
 }: AppDropdownMenuProps) {
     const { theme, language, setTheme, setLanguage } = useAppSettings();
     const [isOpen, setIsOpen] = useState(false);
+    const params = useParams();
+    const locale = params.locale as string;
 
     const tNav = useTranslations("navigation");
     const tTheme = useTranslations("theme");
@@ -127,13 +130,19 @@ export function AppDropdownMenu({
                         <span>{tNav("settings")}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                        <Link href="/help">
+                        <Link
+                            href={`/${locale}/help`}
+                            onClick={() => setIsOpen(false)}
+                        >
                             <HelpCircle className="mr-2 h-4 w-4" />
                             <span>{tNav("help")}</span>
                         </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                        <Link href="/about">
+                        <Link
+                            href={`/${locale}/about`}
+                            onClick={() => setIsOpen(false)}
+                        >
                             <Info className="mr-2 h-4 w-4" />
                             <span>{tNav("about")}</span>
                         </Link>

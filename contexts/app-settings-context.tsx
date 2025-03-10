@@ -8,7 +8,7 @@ import {
     type ReactNode,
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useParams } from "next/navigation";
 import type { Locale } from "@/config";
 
 // Types for application settings
@@ -47,12 +47,15 @@ interface AppSettingsProviderProps {
 export function AppSettingsProvider({ children }: AppSettingsProviderProps) {
     const router = useRouter();
     const pathname = usePathname();
-    const locale = useLocale() as LanguageType;
+    const params = useParams();
+    const locale = (params.locale as string) || "en";
 
     // Initialize state from localStorage or default values
     // We use dark theme by default
     const [theme, setThemeState] = useState<ThemeType>("dark");
-    const [language, setLanguageState] = useState<LanguageType>(locale);
+    const [language, setLanguageState] = useState<LanguageType>(
+        locale as LanguageType
+    );
 
     // Effect to load settings from localStorage on initialization
     useEffect(() => {

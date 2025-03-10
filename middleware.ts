@@ -14,5 +14,6 @@ export default createMiddleware({
 
 export const config = {
     // Skip all paths that should not be internationalized
-    matcher: ["/((?!api|_next|_vercel|.*\\..*).*)"],
+    // Add favicon.ico to the exclusion list
+    matcher: ["/((?!api|_next|_vercel|.*\\..*|favicon.ico).*)"],
 };
