@@ -22,6 +22,9 @@ export default async function HelpPage({
 }) {
     const t = await getTranslations({ locale, namespace: "pages.help" });
 
+    // Pobieramy zawartość jako surowy tekst, bez interpretacji jako format intl
+    const content = t.raw("content");
+
     return (
         <div className="min-h-screen bg-background text-foreground">
             <div className="container mx-auto py-8 px-4">
@@ -36,7 +39,7 @@ export default async function HelpPage({
 
                 <h1 className="text-3xl font-bold mb-6">{t("title")}</h1>
                 <div className="prose dark:prose-invert max-w-none">
-                    <div dangerouslySetInnerHTML={{ __html: t("content") }} />
+                    <div dangerouslySetInnerHTML={{ __html: content }} />
                 </div>
             </div>
         </div>
