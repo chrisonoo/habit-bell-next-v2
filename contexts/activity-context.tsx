@@ -16,6 +16,14 @@ export interface ActivityRecord {
     date: string; // Format YYYY-MM-DD dla łatwiejszego grupowania
 }
 
+// Add the DailyStats interface after the ActivityRecord interface
+export interface DailyStats {
+    date: string;
+    sessions: number;
+    intervals: number;
+    pauses: number;
+}
+
 // Interfejs dla kontekstu aktywności
 interface ActivityContextType {
     pauseCount: number;
@@ -27,6 +35,7 @@ interface ActivityContextType {
     registerPause: () => void;
     registerInterval: () => void;
     registerSession: () => void;
+    getActivityStats: () => Promise<DailyStats[]>;
 }
 
 // Domyślne wartości dla kontekstu
@@ -40,6 +49,7 @@ const defaultContext: ActivityContextType = {
     registerPause: () => {},
     registerInterval: () => {},
     registerSession: () => {},
+    getActivityStats: async () => [],
 };
 
 // Utworzenie kontekstu
@@ -121,6 +131,96 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
                 reject((event.target as IDBOpenDBRequest).error);
             };
         });
+    };
+
+    // Add the getActivityStats function to the ActivityProvider
+    // Add this function inside the ActivityProvider component before the value declaration
+    const getActivityStats = async (): Promise<DailyStats[]> => {
+        try {
+            console.log("[ACTIVITY][DEBUG] Getting activity statistics");
+
+            const db = await openDatabase();
+            const transaction = db.transaction("activities", "readonly");
+            const store = transaction.objectStore("activities");
+            const dateIndex = store.index("date");
+
+            // Get all unique dates
+            const datesRequest = dateIndex.getAllKeys();
+
+            return new Promise((resolve, reject) => {
+                datesRequest.onsuccess = async () => {
+                    const dates = Array.from(
+                        new Set(datesRequest.result as string[])
+                    );
+                    console.log("[ACTIVITY][DEBUG] Found dates:", dates);
+
+                    const stats: DailyStats[] = [];
+
+                    // For each date, get the count of each activity type
+                    for (const date of dates) {
+                        const typeDateIndex = store.index("type_date");
+
+                        // Get counts for each activity type on this date
+                        const sessionCountRequest = typeDateIndex.count(
+                            IDBKeyRange.only(["session", date])
+                        );
+                        const intervalCountRequest = typeDateIndex.count(
+                            IDBKeyRange.only(["interval", date])
+                        );
+                        const pauseCountRequest = typeDateIndex.count(
+                            IDBKeyRange.only(["pause", date])
+                        );
+
+                        // Wait for all requests to complete
+                        const [sessions, intervals, pauses] = await Promise.all(
+                            [
+                                new Promise<number>((resolve) => {
+                                    sessionCountRequest.onsuccess = () =>
+                                        resolve(sessionCountRequest.result);
+                                }),
+                                new Promise<number>((resolve) => {
+                                    intervalCountRequest.onsuccess = () =>
+                                        resolve(intervalCountRequest.result);
+                                }),
+                                new Promise<number>((resolve) => {
+                                    pauseCountRequest.onsuccess = () =>
+                                        resolve(pauseCountRequest.result);
+                                }),
+                            ]
+                        );
+
+                        // Add the stats for this date
+                        stats.push({
+                            date: date as string,
+                            sessions,
+                            intervals,
+                            pauses,
+                        });
+                    }
+
+                    console.log("[ACTIVITY][DEBUG] Collected stats:", stats);
+                    resolve(stats);
+                };
+
+                datesRequest.onerror = (event) => {
+                    console.error(
+                        "[ACTIVITY][DEBUG] Error getting dates:",
+                        event
+                    );
+                    reject(event);
+                };
+
+                transaction.oncomplete = () => {
+                    db.close();
+                };
+            });
+        } catch (error) {
+            console.error(
+                "[ACTIVITY][DEBUG] Error getting activity stats:",
+                error
+            );
+            return [];
+        }
     };
 
     // Funkcja do rejestrowania nowej aktywności (pauzy, interwału lub sesji)
@@ -291,7 +391,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
         loadActivityCounts();
     }, []);
 
-    // Wartość kontekstu
+    // Update the context value to include the new function
     const value = {
         pauseCount,
         todayPauseCount,
@@ -302,6 +402,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
         registerPause,
         registerInterval,
         registerSession,
+        getActivityStats,
     };
 
     return (
