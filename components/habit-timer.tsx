@@ -312,7 +312,7 @@ export function HabitTimer() {
             <BellLogo />
 
             {/* Top Right Controls */}
-            <div className="absolute top-4 right-4 z-10 flex gap-2 items-center">
+            <div className="absolute top-4 right-3 z-10 flex items-center">
                 {/* Reset Button */}
                 <Button
                     variant="ghost"

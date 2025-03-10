@@ -186,16 +186,14 @@ export function TimerSettingsDialog({
             </DialogTrigger>
 
             {/* Dialog Content */}
-            <DialogContent className="max-w-[360px]">
+            <DialogContent className="max-w-[320px] lg:max-w-[360px]">
                 <DialogHeader>
                     <DialogTitle>Timer Settings</DialogTitle>
-                    <DialogDescription>
-                        Configure the duration of your session and intervals.
-                    </DialogDescription>
+                    <DialogDescription></DialogDescription>
                 </DialogHeader>
 
                 {/* Settings Form */}
-                <div className="grid gap-6 py-4">
+                <div className="grid gap-4 py-2">
                     {/* Session Duration Settings */}
                     <div className="space-y-2">
                         <Label className="text-base">Session Duration</Label>
