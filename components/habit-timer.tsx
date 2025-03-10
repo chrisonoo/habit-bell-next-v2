@@ -6,14 +6,10 @@ import { BellLogo } from "@/components/bell-logo";
 import { TimerControls } from "@/components/timer-controls";
 import { TimerSettingsDialog } from "@/components/timer-settings-dialog";
 import { formatTime } from "@/services/time-service";
-import {
-    CircleDollarSign,
-    CirclePause,
-    TimerReset,
-    Maximize,
-    Flag,
-} from "lucide-react";
+import { TimerReset, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Statistics } from "@/components/statistics";
+import { usePauseContext } from "@/contexts/pause-context";
 
 /**
  * Interface for timer state managed by worker
@@ -82,6 +78,12 @@ export function HabitTimer() {
     // This is used to trigger re-renders when ref values change
     const forceUpdate = useReducer((x) => x + 1, 0)[1];
 
+    // Pobierz funkcję do rejestrowania pauz z kontekstu
+    const { registerPause } = usePauseContext();
+
+    // Ref do śledzenia poprzedniego stanu timera (czy był uruchomiony)
+    const wasRunningRef = useRef(false);
+
     /**
      * Initialize Web Worker
      * This effect runs once when the component mounts and sets up the worker
@@ -120,6 +122,16 @@ export function HabitTimer() {
 
                 // Handle timer state updates
                 if (type === "UPDATE") {
+                    // Sprawdź, czy timer został zatrzymany (pauza)
+                    if (wasRunningRef.current && !payload.isRunning) {
+                        // Timer został zatrzymany - zarejestruj pauzę
+                        registerPause();
+                        console.log("[MAIN] Pause registered");
+                    }
+
+                    // Aktualizuj ref śledzący stan timera
+                    wasRunningRef.current = payload.isRunning;
+
                     // Update timer state reference
                     timerStateRef.current = payload;
 
@@ -263,50 +275,8 @@ export function HabitTimer() {
 
     return (
         <div className="relative flex flex-col items-center justify-between min-h-screen overflow-hidden">
-            {/* Top Left Controls */}
-            <div className="absolute top-4 left-4 z-10 flex gap-3 items-center">
-                {/* Coins Counter Button */}
-                <div className="flex gap-1 items-center">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-10 w-10 lg:h-14 lg:w-14"
-                        onClick={resetTimer}
-                    >
-                        <CircleDollarSign className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
-                        <span className="sr-only">Reset timer</span>
-                    </Button>
-                    <div className="text-xl lg:text-2xl">2</div>
-                </div>
-
-                {/* Interval Counter Button */}
-                <div className="flex gap-1 items-center">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-10 w-10 lg:h-14 lg:w-14"
-                        onClick={resetTimer}
-                    >
-                        <Flag className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
-                        <span className="sr-only">Reset timer</span>
-                    </Button>
-                    <div className="text-xl lg:text-2xl">2</div>
-                </div>
-
-                {/* Pause Counter Button */}
-                <div className="flex gap-1 items-center">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-10 w-10 lg:h-14 lg:w-14"
-                        onClick={resetTimer}
-                    >
-                        <CirclePause className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
-                        <span className="sr-only">Reset timer</span>
-                    </Button>
-                    <div className="text-xl lg:text-2xl">2</div>
-                </div>
-            </div>
+            {/* Statistics Component */}
+            <Statistics />
 
             {/* Logo */}
             <BellLogo />
