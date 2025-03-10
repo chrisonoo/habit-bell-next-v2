@@ -8,8 +8,10 @@ import { TimerSettingsDialog } from "@/components/timer-settings-dialog";
 import { formatTime } from "@/services/time-service";
 import { TimerReset, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Statistics } from "@/components/statistics";
 import { useActivityContext } from "@/contexts/activity-context";
+import { AppDropdownMenu } from "@/components/app-dropdown-menu";
+import { StatisticsDialog } from "@/components/statistics-dialog";
+import { Statistics } from "@/components/statistics";
 
 /**
  * Interface for timer state managed by worker
@@ -55,8 +57,14 @@ interface TimeValue {
  */
 export function HabitTimer() {
     // Pobierz funkcje do rejestrowania aktywności z kontekstu
-    const { registerPause, registerInterval, registerSession } =
-        useActivityContext();
+    const {
+        registerPause,
+        registerInterval,
+        registerSession,
+        todaySessionCount,
+        todayIntervalCount,
+        todayPauseCount,
+    } = useActivityContext();
     console.log(
         "[MAIN][DEBUG] Activity functions available:",
         !!registerPause,
@@ -83,6 +91,9 @@ export function HabitTimer() {
     // State to track if settings dialog is open
     // This controls the visibility of the settings dialog
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+    // Dodaj stan dla dialogu statystyk
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
 
     // Add forceUpdate function
     // This is used to trigger re-renders when ref values change
@@ -370,6 +381,12 @@ export function HabitTimer() {
         <div className="relative flex flex-col items-center justify-between min-h-screen overflow-hidden">
             {/* Statistics Component */}
             <Statistics />
+            {/* Statistics Dialog */}
+            <StatisticsDialog
+                isOpen={isDialogOpen}
+                onOpenChange={setIsDialogOpen}
+                key={`${todaySessionCount}-${todayIntervalCount}-${todayPauseCount}`} // Force refresh when counts change
+            />
 
             {/* Logo */}
             <BellLogo />
@@ -387,14 +404,19 @@ export function HabitTimer() {
                     <span className="sr-only">Reset timer</span>
                 </Button>
 
-                {/* Settings Button and Dialog */}
+                {/* App Dropdown Menu */}
+                <AppDropdownMenu
+                    onOpenStatistics={() => setIsDialogOpen(true)}
+                    onOpenSettings={handleSettingsOpen}
+                />
+
+                {/* Settings Dialog - ukryty, otwierany z menu */}
                 <TimerSettingsDialog
                     sessionDuration={sessionDurationTime}
                     intervalDuration={intervalDurationTime}
                     onSave={saveSettings}
                     isOpen={isSettingsOpen}
                     onOpenChange={setIsSettingsOpen}
-                    onOpen={handleSettingsOpen}
                 />
             </div>
 

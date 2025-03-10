@@ -8,13 +8,12 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
     DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { EllipsisVertical, Plus, Minus } from "lucide-react";
+import { Plus, Minus } from "lucide-react";
 
 /**
  * Interface for time values (minutes and seconds)
@@ -39,9 +38,8 @@ interface TimerSettingsDialogProps {
     sessionDuration: TimeValue;
     intervalDuration: TimeValue;
     onSave: (sessionDuration: TimeValue, intervalDuration: TimeValue) => void;
-    isOpen?: boolean;
-    onOpenChange?: (open: boolean) => void;
-    onOpen?: () => void;
+    isOpen: boolean;
+    onOpenChange: (open: boolean) => void;
 }
 
 /**
@@ -63,7 +61,6 @@ export function TimerSettingsDialog({
     onSave,
     isOpen,
     onOpenChange,
-    onOpen,
 }: TimerSettingsDialogProps) {
     // Local state for session duration
     // This allows the user to modify the value without immediately applying it
@@ -99,17 +96,6 @@ export function TimerSettingsDialog({
      * This calls the appropriate callbacks based on the new state
      * @param {boolean} open - New open state
      */
-    const handleOpenChange = (open: boolean) => {
-        // If the dialog is being opened and onOpen is provided, call it
-        if (open && onOpen) {
-            onOpen();
-        }
-
-        // Call the onOpenChange callback if provided
-        if (onOpenChange) {
-            onOpenChange(open);
-        }
-    };
 
     /**
      * Handle session minutes input change
@@ -209,19 +195,7 @@ export function TimerSettingsDialog({
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-            {/* Dialog Trigger Button */}
-            <DialogTrigger asChild>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-10 w-10 lg:h-14 lg:w-14"
-                >
-                    <EllipsisVertical className="!h-6 !w-6 lg:!h-8 lg:!w-8" />
-                    <span className="sr-only">Settings</span>
-                </Button>
-            </DialogTrigger>
-
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
             {/* Dialog Content */}
             <DialogContent className="max-w-[320px] lg:max-w-[360px]">
                 <DialogHeader>
