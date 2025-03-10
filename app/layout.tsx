@@ -21,7 +21,7 @@ export default function RootLayout({
     return (
         // Add dark class to html to use dark theme by default
         <html lang="en" className="dark">
-            <body className={inter.className}>
+            <body className={inter.className + " h-dvh"}>
                 <AppSettingsProvider>
                     <ActivityProvider>{children}</ActivityProvider>
                 </AppSettingsProvider>
