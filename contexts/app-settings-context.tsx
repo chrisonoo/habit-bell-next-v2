@@ -9,10 +9,11 @@ import {
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useLocale } from "next-intl";
+import type { Locale } from "@/config";
 
 // Types for application settings
 export type ThemeType = "light" | "dark";
-export type LanguageType = "en" | "pl" | "no";
+export type LanguageType = Locale;
 
 // Interface for application settings context
 interface AppSettingsContextType {
