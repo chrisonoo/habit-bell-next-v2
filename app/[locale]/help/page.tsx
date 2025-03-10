@@ -1,5 +1,4 @@
 import { getTranslations } from "next-intl/server";
-import { useTranslations } from "next-intl";
 
 export async function generateMetadata({
     params: { locale },
@@ -13,8 +12,12 @@ export async function generateMetadata({
     };
 }
 
-export default function HelpPage() {
-    const t = useTranslations("pages.help");
+export default async function HelpPage({
+    params: { locale },
+}: {
+    params: { locale: string };
+}) {
+    const t = await getTranslations({ locale, namespace: "pages.help" });
 
     return (
         <div className="container mx-auto py-8 px-4">

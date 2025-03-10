@@ -1,6 +1,7 @@
 import type React from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
 import "../globals.css";
 import { ActivityProvider } from "@/contexts/activity-context";
@@ -31,13 +32,23 @@ export default async function RootLayout({
         notFound();
     }
 
+    // Load messages for the current locale
+    let messages;
+    try {
+        messages = (await import(`../../messages/${locale}.json`)).default;
+    } catch (error) {
+        notFound();
+    }
+
     return (
         // Add dark class to html to use dark theme by default
         <html lang={locale} className="dark">
             <body className={inter.className}>
-                <AppSettingsProvider>
-                    <ActivityProvider>{children}</ActivityProvider>
-                </AppSettingsProvider>
+                <NextIntlClientProvider locale={locale} messages={messages}>
+                    <AppSettingsProvider>
+                        <ActivityProvider>{children}</ActivityProvider>
+                    </AppSettingsProvider>
+                </NextIntlClientProvider>
             </body>
         </html>
     );
