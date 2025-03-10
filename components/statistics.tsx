@@ -44,7 +44,7 @@ export function Statistics() {
         );
     }, [todaySessionCount]);
 
-    // Open the statistics dialog
+    // Add a refresh mechanism when the dialog is opened
     const openStatisticsDialog = () => {
         setIsDialogOpen(true);
     };
@@ -103,6 +103,7 @@ export function Statistics() {
             <StatisticsDialog
                 isOpen={isDialogOpen}
                 onOpenChange={setIsDialogOpen}
+                key={`${todaySessionCount}-${todayIntervalCount}-${todayPauseCount}`} // Force refresh when counts change
             />
         </>
     );

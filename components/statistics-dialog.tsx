@@ -93,8 +93,10 @@ export function StatisticsDialog({
         direction: "asc" | "desc"
     ): DailyStats[] => {
         return [...data].sort((a, b) => {
-            const dateA = new Date(a.date).getTime();
-            const dateB = new Date(b.date).getTime();
+            // Parse dates correctly
+            const dateA = new Date(a.date + "T00:00:00").getTime();
+            const dateB = new Date(b.date + "T00:00:00").getTime();
+            // Sort in descending order by default (newest first)
             return direction === "asc" ? dateA - dateB : dateB - dateA;
         });
     };
@@ -114,12 +116,12 @@ export function StatisticsDialog({
      * @returns {string} The formatted date string
      */
     const formatDate = (dateStr: string): string => {
-        const date = new Date(dateStr);
-        return date.toLocaleDateString(undefined, {
+        const date = new Date(dateStr + "T00:00:00");
+        return new Intl.DateTimeFormat(undefined, {
             year: "numeric",
             month: "short",
             day: "numeric",
-        });
+        }).format(date);
     };
 
     /**
@@ -129,7 +131,7 @@ export function StatisticsDialog({
      */
     const isToday = (dateStr: string): boolean => {
         const today = new Date();
-        const date = new Date(dateStr);
+        const date = new Date(dateStr + "T00:00:00");
         return (
             date.getDate() === today.getDate() &&
             date.getMonth() === today.getMonth() &&
@@ -139,7 +141,7 @@ export function StatisticsDialog({
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-full h-full sm:h-[90vh] sm:max-h-[90vh] sm:max-w-[90vw] p-0 flex flex-col">
+            <DialogContent className="max-w-full h-[100dvh] sm:h-[100dvh] sm:max-h-[100dvh] sm:max-w-[100vw] p-0 flex flex-col">
                 <DialogHeader className="p-4 border-b sticky top-0 bg-background z-10 flex-row items-center justify-between">
                     <DialogTitle className="text-xl">
                         Daily Statistics

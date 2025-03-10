@@ -142,69 +142,55 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
             const db = await openDatabase();
             const transaction = db.transaction("activities", "readonly");
             const store = transaction.objectStore("activities");
-            const dateIndex = store.index("date");
 
-            // Get all unique dates
-            const datesRequest = dateIndex.getAllKeys();
-
+            // Get all activities
             return new Promise((resolve, reject) => {
-                datesRequest.onsuccess = async () => {
-                    const dates = Array.from(
-                        new Set(datesRequest.result as string[])
+                const request = store.getAll();
+
+                request.onsuccess = () => {
+                    const activities = request.result;
+
+                    // Group activities by date
+                    const groupedByDate = activities.reduce(
+                        (acc: { [key: string]: DailyStats }, activity) => {
+                            const { date, type } = activity;
+
+                            if (!acc[date]) {
+                                acc[date] = {
+                                    date,
+                                    sessions: 0,
+                                    intervals: 0,
+                                    pauses: 0,
+                                };
+                            }
+
+                            // Increment the appropriate counter
+                            switch (type) {
+                                case "session":
+                                    acc[date].sessions++;
+                                    break;
+                                case "interval":
+                                    acc[date].intervals++;
+                                    break;
+                                case "pause":
+                                    acc[date].pauses++;
+                                    break;
+                            }
+
+                            return acc;
+                        },
+                        {}
                     );
-                    console.log("[ACTIVITY][DEBUG] Found dates:", dates);
 
-                    const stats: DailyStats[] = [];
-
-                    // For each date, get the count of each activity type
-                    for (const date of dates) {
-                        const typeDateIndex = store.index("type_date");
-
-                        // Get counts for each activity type on this date
-                        const sessionCountRequest = typeDateIndex.count(
-                            IDBKeyRange.only(["session", date])
-                        );
-                        const intervalCountRequest = typeDateIndex.count(
-                            IDBKeyRange.only(["interval", date])
-                        );
-                        const pauseCountRequest = typeDateIndex.count(
-                            IDBKeyRange.only(["pause", date])
-                        );
-
-                        // Wait for all requests to complete
-                        const [sessions, intervals, pauses] = await Promise.all(
-                            [
-                                new Promise<number>((resolve) => {
-                                    sessionCountRequest.onsuccess = () =>
-                                        resolve(sessionCountRequest.result);
-                                }),
-                                new Promise<number>((resolve) => {
-                                    intervalCountRequest.onsuccess = () =>
-                                        resolve(intervalCountRequest.result);
-                                }),
-                                new Promise<number>((resolve) => {
-                                    pauseCountRequest.onsuccess = () =>
-                                        resolve(pauseCountRequest.result);
-                                }),
-                            ]
-                        );
-
-                        // Add the stats for this date
-                        stats.push({
-                            date: date as string,
-                            sessions,
-                            intervals,
-                            pauses,
-                        });
-                    }
-
+                    // Convert the grouped data to an array
+                    const stats = Object.values(groupedByDate);
                     console.log("[ACTIVITY][DEBUG] Collected stats:", stats);
                     resolve(stats);
                 };
 
-                datesRequest.onerror = (event) => {
+                request.onerror = (event) => {
                     console.error(
-                        "[ACTIVITY][DEBUG] Error getting dates:",
+                        "[ACTIVITY][DEBUG] Error getting activities:",
                         event
                     );
                     reject(event);
