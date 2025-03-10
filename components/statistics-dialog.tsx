@@ -26,10 +26,12 @@ import { cn } from "@/lib/utils";
  * @interface StatisticsDialogProps
  * @property {boolean} isOpen - Whether the dialog is currently open
  * @property {function} onOpenChange - Function to call when the dialog open state changes
+ * @property {string} [key] - Optional key for forcing re-renders
  */
 interface StatisticsDialogProps {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
+    key?: string;
 }
 
 /**
@@ -93,10 +95,9 @@ export function StatisticsDialog({
         direction: "asc" | "desc"
     ): DailyStats[] => {
         return [...data].sort((a, b) => {
-            // Parse dates correctly
-            const dateA = new Date(a.date + "T00:00:00").getTime();
-            const dateB = new Date(b.date + "T00:00:00").getTime();
-            // Sort in descending order by default (newest first)
+            // Ensure we're comparing valid date strings in YYYY-MM-DD format
+            const dateA = a.date ? new Date(a.date).getTime() : 0;
+            const dateB = b.date ? new Date(b.date).getTime() : 0;
             return direction === "asc" ? dateA - dateB : dateB - dateA;
         });
     };
@@ -116,12 +117,27 @@ export function StatisticsDialog({
      * @returns {string} The formatted date string
      */
     const formatDate = (dateStr: string): string => {
-        const date = new Date(dateStr + "T00:00:00");
-        return new Intl.DateTimeFormat(undefined, {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-        }).format(date);
+        if (!dateStr || !dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            return "Invalid date";
+        }
+
+        try {
+            const [year, month, day] = dateStr.split("-").map(Number);
+            const date = new Date(year, month - 1, day);
+
+            if (isNaN(date.getTime())) {
+                return "Invalid date";
+            }
+
+            return new Intl.DateTimeFormat(undefined, {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+            }).format(date);
+        } catch (error) {
+            console.error("Error formatting date:", error);
+            return "Invalid date";
+        }
     };
 
     /**
@@ -130,13 +146,23 @@ export function StatisticsDialog({
      * @returns {boolean} Whether the date is today
      */
     const isToday = (dateStr: string): boolean => {
-        const today = new Date();
-        const date = new Date(dateStr + "T00:00:00");
-        return (
-            date.getDate() === today.getDate() &&
-            date.getMonth() === today.getMonth() &&
-            date.getFullYear() === today.getFullYear()
-        );
+        if (!dateStr || !dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            return false;
+        }
+
+        try {
+            const today = new Date();
+            const [year, month, day] = dateStr.split("-").map(Number);
+            const date = new Date(year, month - 1, day);
+
+            return (
+                date.getDate() === today.getDate() &&
+                date.getMonth() === today.getMonth() &&
+                date.getFullYear() === today.getFullYear()
+            );
+        } catch (error) {
+            return false;
+        }
     };
 
     return (
@@ -167,30 +193,38 @@ export function StatisticsDialog({
                         </div>
                     ) : (
                         <div className="w-full">
-                            {/* Table header */}
-                            <div className="grid grid-cols-4 gap-4 mb-4 font-semibold border-b pb-2">
-                                <div className="flex items-center gap-2">
+                            {/* Table header - Reduced font size for mobile */}
+                            <div className="grid grid-cols-4 gap-2 mb-4 font-semibold border-b pb-2">
+                                <div className="flex items-center gap-1">
                                     <Button
                                         variant="ghost"
                                         size="sm"
                                         className="p-1 h-auto"
                                         onClick={toggleSortDirection}
                                     >
-                                        <span>Date</span>
-                                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                                        <span className="text-xs sm:text-sm">
+                                            Date
+                                        </span>
+                                        <ArrowUpDown className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
                                     </Button>
                                 </div>
                                 <div className="flex items-center justify-center gap-1">
-                                    <CircleDollarSign className="h-4 w-4" />
-                                    <span>Sessions</span>
+                                    <CircleDollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
+                                    <span className="text-xs sm:text-sm">
+                                        Sessions
+                                    </span>
                                 </div>
                                 <div className="flex items-center justify-center gap-1">
-                                    <Flag className="h-4 w-4" />
-                                    <span>Intervals</span>
+                                    <Flag className="h-3 w-3 sm:h-4 sm:w-4" />
+                                    <span className="text-xs sm:text-sm">
+                                        Intervals
+                                    </span>
                                 </div>
                                 <div className="flex items-center justify-center gap-1">
-                                    <CirclePause className="h-4 w-4" />
-                                    <span>Pauses</span>
+                                    <CirclePause className="h-3 w-3 sm:h-4 sm:w-4" />
+                                    <span className="text-xs sm:text-sm">
+                                        Pauses
+                                    </span>
                                 </div>
                             </div>
 
@@ -199,13 +233,14 @@ export function StatisticsDialog({
                                 <div
                                     key={stat.date}
                                     className={cn(
-                                        "grid grid-cols-4 gap-4 py-3 border-b",
+                                        "grid grid-cols-4 gap-2 py-3 border-b",
                                         isToday(stat.date) && "bg-primary/5"
                                     )}
                                 >
                                     <div className="flex items-center">
                                         <span
                                             className={cn(
+                                                "text-xs sm:text-sm",
                                                 isToday(stat.date) &&
                                                     "font-semibold"
                                             )}
@@ -214,13 +249,13 @@ export function StatisticsDialog({
                                             {isToday(stat.date) && " (Today)"}
                                         </span>
                                     </div>
-                                    <div className="flex items-center justify-center">
+                                    <div className="flex items-center justify-center text-xs sm:text-sm">
                                         {stat.sessions}
                                     </div>
-                                    <div className="flex items-center justify-center">
+                                    <div className="flex items-center justify-center text-xs sm:text-sm">
                                         {stat.intervals}
                                     </div>
-                                    <div className="flex items-center justify-center">
+                                    <div className="flex items-center justify-center text-xs sm:text-sm">
                                         {stat.pauses}
                                     </div>
                                 </div>
