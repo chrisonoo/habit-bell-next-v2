@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ActivityProvider } from "@/contexts/activity-context";
+import { AppSettingsProvider } from "@/contexts/app-settings-context";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,9 +19,12 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en">
+        // Add dark class to html to use dark theme by default
+        <html lang="en" className="dark">
             <body className={inter.className}>
-                <ActivityProvider>{children}</ActivityProvider>
+                <AppSettingsProvider>
+                    <ActivityProvider>{children}</ActivityProvider>
+                </AppSettingsProvider>
             </body>
         </html>
     );

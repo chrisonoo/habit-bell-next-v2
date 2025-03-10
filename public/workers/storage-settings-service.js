@@ -2,7 +2,7 @@
 // These constants define the database structure and default values
 const DB_NAME = "habit-bell-db"; // Name of the IndexedDB database
 const STORE_NAME = "settings"; // Name of the object store (similar to a table)
-const DB_VERSION = 2; // Wersja bazy danych
+const DB_VERSION = 2; // Database version
 const SETTINGS_KEY = "timer-settings"; // Key used to store/retrieve settings object
 
 // Default settings values - used when no saved settings exist
@@ -59,14 +59,14 @@ function openDatabase() {
                 logFunction("[STORAGE][02] Created settings store");
             }
 
-            // Dodajemy obsługę store'a activities, jeśli nie istnieje
+            // Add activities store if it doesn't exist
             if (!db.objectStoreNames.contains("activities")) {
                 const activityStore = db.createObjectStore("activities", {
                     keyPath: "id",
                     autoIncrement: true,
                 });
 
-                // Dodaj indeksy dla typu i daty, aby ułatwić wyszukiwanie aktywności
+                // Add indexes for type and date to facilitate activity searches
                 activityStore.createIndex("type", "type", { unique: false });
                 activityStore.createIndex("date", "date", { unique: false });
                 activityStore.createIndex("type_date", ["type", "date"], {
