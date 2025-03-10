@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { EllipsisVertical } from "lucide-react";
+import { EllipsisVertical, Plus, Minus } from "lucide-react";
 
 /**
  * Interface for time values (minutes and seconds)
@@ -171,6 +171,43 @@ export function TimerSettingsDialog({
         setInterval((prev) => ({ ...prev, seconds: value }));
     };
 
+    /**
+     * Increment or decrement a time value
+     * @param {string} type - The type of time value to change (session-min, session-sec, interval-min, interval-sec)
+     * @param {number} amount - The amount to change the value by
+     */
+    const adjustTimeValue = (
+        type: "session-min" | "session-sec" | "interval-min" | "interval-sec",
+        amount: number
+    ) => {
+        switch (type) {
+            case "session-min":
+                setSession((prev) => ({
+                    ...prev,
+                    minutes: Math.max(0, Math.min(120, prev.minutes + amount)),
+                }));
+                break;
+            case "session-sec":
+                setSession((prev) => ({
+                    ...prev,
+                    seconds: Math.max(0, Math.min(59, prev.seconds + amount)),
+                }));
+                break;
+            case "interval-min":
+                setInterval((prev) => ({
+                    ...prev,
+                    minutes: Math.max(0, Math.min(60, prev.minutes + amount)),
+                }));
+                break;
+            case "interval-sec":
+                setInterval((prev) => ({
+                    ...prev,
+                    seconds: Math.max(0, Math.min(59, prev.seconds + amount)),
+                }));
+                break;
+        }
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={handleOpenChange}>
             {/* Dialog Trigger Button */}
@@ -198,29 +235,89 @@ export function TimerSettingsDialog({
                     <div className="space-y-2">
                         <Label className="text-base">Session Duration</Label>
                         <div className="flex items-center gap-2">
-                            {/* Minutes Input */}
-                            <div className="flex-1 flex items-center gap-2">
-                                <Input
-                                    type="number"
-                                    min="0"
-                                    max="120"
-                                    value={session.minutes}
-                                    onChange={handleSessionMinutesChange}
-                                    className="w-full"
-                                />
+                            {/* Minutes Input with +/- buttons */}
+                            <div className="flex-1 flex items-center gap-1">
+                                <div className="flex flex-1 items-center">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8 rounded-r-none"
+                                        onClick={() =>
+                                            adjustTimeValue("session-min", -1)
+                                        }
+                                    >
+                                        <Minus className="h-4 w-4" />
+                                        <span className="sr-only">
+                                            Decrease minutes
+                                        </span>
+                                    </Button>
+                                    <Input
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        value={session.minutes}
+                                        onChange={handleSessionMinutesChange}
+                                        className="rounded-none text-center"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8 rounded-l-none"
+                                        onClick={() =>
+                                            adjustTimeValue("session-min", 1)
+                                        }
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                        <span className="sr-only">
+                                            Increase minutes
+                                        </span>
+                                    </Button>
+                                </div>
                                 <span className="text-sm">min</span>
                             </div>
 
-                            {/* Seconds Input */}
-                            <div className="flex-1 flex items-center gap-2">
-                                <Input
-                                    type="number"
-                                    min="0"
-                                    max="59"
-                                    value={session.seconds}
-                                    onChange={handleSessionSecondsChange}
-                                    className="w-full"
-                                />
+                            {/* Seconds Input with +/- buttons */}
+                            <div className="flex-1 flex items-center gap-1">
+                                <div className="flex flex-1 items-center">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8 rounded-r-none"
+                                        onClick={() =>
+                                            adjustTimeValue("session-sec", -5)
+                                        }
+                                    >
+                                        <Minus className="h-4 w-4" />
+                                        <span className="sr-only">
+                                            Decrease seconds
+                                        </span>
+                                    </Button>
+                                    <Input
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        value={session.seconds}
+                                        onChange={handleSessionSecondsChange}
+                                        className="rounded-none text-center"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8 rounded-l-none"
+                                        onClick={() =>
+                                            adjustTimeValue("session-sec", 5)
+                                        }
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                        <span className="sr-only">
+                                            Increase seconds
+                                        </span>
+                                    </Button>
+                                </div>
                                 <span className="text-sm">sec</span>
                             </div>
                         </div>
@@ -230,29 +327,89 @@ export function TimerSettingsDialog({
                     <div className="space-y-2">
                         <Label className="text-base">Interval Duration</Label>
                         <div className="flex items-center gap-2">
-                            {/* Minutes Input */}
-                            <div className="flex-1 flex items-center gap-2">
-                                <Input
-                                    type="number"
-                                    min="0"
-                                    max="60"
-                                    value={interval.minutes}
-                                    onChange={handleIntervalMinutesChange}
-                                    className="w-full"
-                                />
+                            {/* Minutes Input with +/- buttons */}
+                            <div className="flex-1 flex items-center gap-1">
+                                <div className="flex flex-1 items-center">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8 rounded-r-none"
+                                        onClick={() =>
+                                            adjustTimeValue("interval-min", -1)
+                                        }
+                                    >
+                                        <Minus className="h-4 w-4" />
+                                        <span className="sr-only">
+                                            Decrease minutes
+                                        </span>
+                                    </Button>
+                                    <Input
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        value={interval.minutes}
+                                        onChange={handleIntervalMinutesChange}
+                                        className="rounded-none text-center"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8 rounded-l-none"
+                                        onClick={() =>
+                                            adjustTimeValue("interval-min", 1)
+                                        }
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                        <span className="sr-only">
+                                            Increase minutes
+                                        </span>
+                                    </Button>
+                                </div>
                                 <span className="text-sm">min</span>
                             </div>
 
-                            {/* Seconds Input */}
-                            <div className="flex-1 flex items-center gap-2">
-                                <Input
-                                    type="number"
-                                    min="0"
-                                    max="59"
-                                    value={interval.seconds}
-                                    onChange={handleIntervalSecondsChange}
-                                    className="w-full"
-                                />
+                            {/* Seconds Input with +/- buttons */}
+                            <div className="flex-1 flex items-center gap-1">
+                                <div className="flex flex-1 items-center">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8 rounded-r-none"
+                                        onClick={() =>
+                                            adjustTimeValue("interval-sec", -5)
+                                        }
+                                    >
+                                        <Minus className="h-4 w-4" />
+                                        <span className="sr-only">
+                                            Decrease seconds
+                                        </span>
+                                    </Button>
+                                    <Input
+                                        type="text"
+                                        inputMode="numeric"
+                                        pattern="[0-9]*"
+                                        value={interval.seconds}
+                                        onChange={handleIntervalSecondsChange}
+                                        className="rounded-none text-center"
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="icon"
+                                        className="h-8 w-8 rounded-l-none"
+                                        onClick={() =>
+                                            adjustTimeValue("interval-sec", 5)
+                                        }
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                        <span className="sr-only">
+                                            Increase seconds
+                                        </span>
+                                    </Button>
+                                </div>
                                 <span className="text-sm">sec</span>
                             </div>
                         </div>
