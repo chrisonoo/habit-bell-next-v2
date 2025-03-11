@@ -10,6 +10,7 @@ import { useTranslations } from "next-intl";
  * @interface TimerControlsProps
  * @property {boolean} isRunning - Whether the timer is currently running
  * @property {boolean} isSessionEnded - Whether the session has ended
+ * @property {boolean} isPlayingSound - Whether the session has ended
  * @property {function} onToggle - Function to call when the play/pause button is clicked
  * @property {function} onReset - Function to call when the reset button is clicked
  * @property {string} [className] - Optional CSS class name for styling
@@ -17,6 +18,7 @@ import { useTranslations } from "next-intl";
 interface TimerControlsProps {
     isRunning: boolean;
     isSessionEnded: boolean;
+    isPlayingSound: boolean; // Nowa właściwość
     onToggle: () => void;
     onReset: () => void;
     className?: string;
@@ -36,6 +38,7 @@ interface TimerControlsProps {
 export function TimerControls({
     isRunning,
     isSessionEnded,
+    isPlayingSound,
     onToggle,
     onReset,
     className,
@@ -74,6 +77,7 @@ export function TimerControls({
                 size="lg"
                 className="rounded-full h-16 w-16"
                 onClick={handleClick}
+                disabled={isPlayingSound} // Blokowanie przycisku podczas odtwarzania dźwięku
                 aria-label={
                     isSessionEnded
                         ? t("reset")

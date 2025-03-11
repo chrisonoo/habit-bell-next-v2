@@ -13,6 +13,10 @@ import { useActivityContext } from "@/contexts/activity-context";
 import { AppDropdownMenu } from "@/components/app-dropdown-menu";
 import { StatisticsDialog } from "@/components/statistics-dialog";
 import { Statistics } from "@/components/statistics";
+import {
+    useSoundContext,
+    defaultIntervalEndSequence,
+} from "@/contexts/sound-context";
 
 /**
  * Interface for timer state managed by worker
@@ -119,6 +123,12 @@ export function HabitTimer() {
     // Ref to track whether timer is being manually reset
     const isManualResetRef = useRef(false);
 
+    // Dodaj użycie kontekstu dźwiękowego
+    const { playSequence, isPlaying: isSoundPlaying } = useSoundContext();
+
+    // Dodaj stan do śledzenia, czy dźwięk jest odtwarzany
+    const [isPlayingSound, setIsPlayingSound] = useState(false);
+
     /**
      * Initialize Web Worker
      * This effect runs once when the component mounts and sets up the worker
@@ -211,6 +221,29 @@ export function HabitTimer() {
                             isSessionEnd
                         );
                         registerInterval();
+
+                        // Dodaj automatyczną pauzę timera
+                        if (workerRef.current && payload.isRunning) {
+                            console.log(
+                                "[MAIN][DEBUG] Auto-pausing timer for sound playback"
+                            );
+                            workerRef.current.postMessage({ type: "PAUSE" });
+                        }
+
+                        // Odtwórz sekwencję dźwięków
+                        setIsPlayingSound(true);
+                        playSequence(defaultIntervalEndSequence, () => {
+                            console.log(
+                                "[MAIN][DEBUG] Sound sequence completed"
+                            );
+                            setIsPlayingSound(false);
+                        }).catch((error) => {
+                            console.error(
+                                "[MAIN][DEBUG] Error playing sound sequence:",
+                                error
+                            );
+                            setIsPlayingSound(false);
+                        });
                     }
 
                     // Reset manual reset flag after processing update
@@ -246,7 +279,7 @@ export function HabitTimer() {
                 workerRef.current.postMessage({ type: "GET_INITIAL_SETTINGS" });
             }
         }
-    }, [registerInterval, registerSession, registerPause]);
+    }, [registerInterval, registerSession, registerPause, playSequence]);
 
     /**
      * Reset timer to initial state
@@ -463,6 +496,7 @@ export function HabitTimer() {
                         isSessionEnded={
                             timerStateRef.current?.sessionTimeLeft === 0
                         }
+                        isPlayingSound={isPlayingSound}
                         onToggle={toggleTimer}
                         onReset={resetTimer}
                     />
