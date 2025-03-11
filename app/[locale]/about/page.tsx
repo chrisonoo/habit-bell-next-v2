@@ -2,6 +2,13 @@ import { getTranslations } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { locales } from "@/config";
+import { setRequestLocale } from "next-intl/server";
+
+// Generujemy statyczne parametry dla wszystkich obsługiwanych języków
+export function generateStaticParams() {
+    return locales.map((locale) => ({ locale }));
+}
 
 export async function generateMetadata({
     params: { locale },
@@ -20,6 +27,9 @@ export default async function AboutPage({
 }: {
     params: { locale: string };
 }) {
+    // Ustawiamy locale dla statycznego renderowania
+    setRequestLocale(locale);
+
     const t = await getTranslations({ locale, namespace: "pages.about" });
 
     // Pobieramy zawartość jako surowy tekst, bez interpretacji jako format intl

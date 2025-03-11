@@ -34,7 +34,14 @@ export function TimerControls({
     className,
 }: TimerControlsProps) {
     // Get translations
-    const t = useTranslations("timer");
+    let t;
+
+    try {
+        t = useTranslations("timer");
+    } catch (error) {
+        console.error("Translation context not available:", error);
+        t = (key: string) => key;
+    }
 
     // Local state to track button state
     // This provides an additional layer of state management to ensure UI consistency

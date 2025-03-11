@@ -7,6 +7,7 @@ import "../globals.css";
 import { ActivityProvider } from "@/contexts/activity-context";
 import { AppSettingsProvider } from "@/contexts/app-settings-context";
 import { locales } from "@/config";
+import { setRequestLocale } from "next-intl/server";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,6 +28,9 @@ export default async function RootLayout({
     children: React.ReactNode;
     params: { locale: string };
 }>) {
+    // Ustawiamy locale dla statycznego renderowania
+    setRequestLocale(locale);
+
     // Validate that the incoming `locale` parameter is valid
     if (!locales.includes(locale as any)) {
         notFound();
@@ -44,7 +48,11 @@ export default async function RootLayout({
         // Add dark class to html to use dark theme by default
         <html lang={locale} className="dark">
             <body className={inter.className}>
-                <NextIntlClientProvider locale={locale} messages={messages}>
+                <NextIntlClientProvider
+                    locale={locale}
+                    messages={messages}
+                    timeZone="UTC"
+                >
                     <AppSettingsProvider>
                         <ActivityProvider>{children}</ActivityProvider>
                     </AppSettingsProvider>

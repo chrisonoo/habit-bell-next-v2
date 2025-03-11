@@ -23,6 +23,8 @@ const nextConfig = {
         parallelServerBuildTraces: true,
         parallelServerCompiles: true,
     },
+    // Dodajemy konfigurację dla statycznego generowania
+    output: "standalone",
 };
 
 mergeConfig(nextConfig, userConfig);

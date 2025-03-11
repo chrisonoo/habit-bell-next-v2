@@ -1,5 +1,11 @@
 import { HabitTimer } from "@/components/habit-timer";
 import { getTranslations } from "next-intl/server";
+import { locales } from "@/config";
+
+// Generujemy statyczne parametry dla wszystkich obsługiwanych języków
+export function generateStaticParams() {
+    return locales.map((locale) => ({ locale }));
+}
 
 export async function generateMetadata({
     params: { locale },

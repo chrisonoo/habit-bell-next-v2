@@ -26,7 +26,7 @@ interface TimerState {
 
 /**
  * Interface for timer settings
- * This represents the configuration values for the timer
+ * This represents the configuration values for timer settings
  */
 interface TimerSettings {
     sessionDuration: number; // Total session duration in seconds
