@@ -10,9 +10,8 @@ export default getRequestConfig(async ({ locale }) => {
     return {
         locale,
         messages: (await import(`../messages/${locale}.json`)).default,
-        // Dodajemy timeZone, aby uniknąć problemów z formatowaniem dat
-        timeZone: "Europe/Warsaw",
-        // Dodajemy now, aby uniknąć problemów z formatowaniem dat
+        // Unikamy używania funkcji, które mogą wymagać dostępu do nagłówków
+        timeZone: "UTC",
         now: new Date(),
     };
 });

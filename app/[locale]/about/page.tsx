@@ -2,9 +2,12 @@ import { getTranslations } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { locales } from "@/config";
 
-// Dodajemy konfigurację dynamicznego renderowania
-export const dynamic = "force-dynamic";
+// Generujemy statyczne parametry dla wszystkich obsługiwanych języków
+export function generateStaticParams() {
+    return locales.map((locale) => ({ locale }));
+}
 
 export async function generateMetadata({
     params: { locale },
