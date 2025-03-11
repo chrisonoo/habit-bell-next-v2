@@ -10,7 +10,6 @@ export default getRequestConfig(async ({ locale }) => {
     return {
         locale,
         messages: (await import(`../messages/${locale}.json`)).default,
-        // Unikamy używania funkcji, które mogą wymagać dostępu do nagłówków
         timeZone: "UTC",
         now: new Date(),
     };

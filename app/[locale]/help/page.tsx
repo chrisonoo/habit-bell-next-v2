@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { locales } from "@/config";
+import { setRequestLocale } from "next-intl/server";
 
 // Generujemy statyczne parametry dla wszystkich obsługiwanych języków
 export function generateStaticParams() {
@@ -26,6 +27,9 @@ export default async function HelpPage({
 }: {
     params: { locale: string };
 }) {
+    // Ustawiamy locale dla statycznego renderowania
+    setRequestLocale(locale);
+
     const t = await getTranslations({ locale, namespace: "pages.help" });
 
     // Pobieramy zawartość jako surowy tekst, bez interpretacji jako format intl

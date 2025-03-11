@@ -1,55 +1,37 @@
-import type React from "react";
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import { NextIntlClientProvider } from "next-intl";
-import { notFound } from "next/navigation";
-import "../globals.css";
-import { ActivityProvider } from "@/contexts/activity-context";
-import { AppSettingsProvider } from "@/contexts/app-settings-context";
+import { HabitTimer } from "@/components/habit-timer";
+import { getTranslations } from "next-intl/server";
 import { locales } from "@/config";
+import { setRequestLocale } from "next-intl/server";
 
-const inter = Inter({ subsets: ["latin"] });
-
+// Generujemy statyczne parametry dla wszystkich obsługiwanych języków
 export function generateStaticParams() {
     return locales.map((locale) => ({ locale }));
 }
 
-export const metadata: Metadata = {
-    title: "Habit Bell",
-    description: "A Pomodoro-style timer to help build habits",
-    generator: "v0.dev",
-};
-
-export default async function RootLayout({
-    children,
+export async function generateMetadata({
     params: { locale },
-}: Readonly<{
-    children: React.ReactNode;
+}: {
     params: { locale: string };
-}>) {
-    // Validate that the incoming `locale` parameter is valid
-    if (!locales.includes(locale as any)) {
-        notFound();
-    }
+}) {
+    const t = await getTranslations({ locale, namespace: "app" });
 
-    // Load messages for the current locale
-    let messages;
-    try {
-        messages = (await import(`../../messages/${locale}.json`)).default;
-    } catch (error) {
-        notFound();
-    }
+    return {
+        title: t("title"),
+        description: t("description"),
+    };
+}
+
+export default function Home({
+    params: { locale },
+}: {
+    params: { locale: string };
+}) {
+    // Ustawiamy locale dla statycznego renderowania
+    setRequestLocale(locale);
 
     return (
-        // Add dark class to html to use dark theme by default
-        <html lang={locale} className="dark">
-            <body className={inter.className}>
-                <NextIntlClientProvider locale={locale} messages={messages}>
-                    <AppSettingsProvider>
-                        <ActivityProvider>{children}</ActivityProvider>
-                    </AppSettingsProvider>
-                </NextIntlClientProvider>
-            </body>
-        </html>
+        <main className="bg-background text-foreground min-h-screen">
+            <HabitTimer />
+        </main>
     );
 }
