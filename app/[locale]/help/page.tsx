@@ -37,11 +37,11 @@ export default async function HelpPage({
 
     return (
         <div className="min-h-screen bg-background text-foreground">
-            <div className="container mx-auto py-8 px-4">
+            <div className="container mx-auto py-8">
                 <div className="mb-6">
                     <Link href={`/${locale}`}>
-                        <Button variant="ghost" size="icon" className="mr-2">
-                            <ArrowLeft className="h-5 w-5" />
+                        <Button variant="ghost" size="icon" className="-ml-3">
+                            <ArrowLeft className="!h-6 !w-6" />
                             <span className="sr-only">Back to timer</span>
                         </Button>
                     </Link>

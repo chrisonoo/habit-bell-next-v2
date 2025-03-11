@@ -64,7 +64,7 @@
     "pages": {
         "help": {
             "title": "Pomoc",
-            "content": "<h2>Pierwsze kroki</h2><p>Habit Bell to timer w stylu Pomodoro zaprojektowany, aby pomóc Ci budować nawyki poprzez sesje skupionej pracy i regularne przerwy.</p><h2>Jak używać</h2><p>1. Ustaw pożądany czas trwania sesji i interwałów w Ustawieniach.</p><p>2. Naciśnij przycisk odtwarzania, aby uruchomić timer.</p><p>3. Pracuj, aż timer interwału się zakończy.</p><p>4. Zrób krótką przerwę, gdy interwał się skończy.</p><p>5. Kontynuuj, aż sesja zostanie zakończona.</p><h2>Statystyki</h2><p>Habit Bell śledzi Twoje sesje, interwały i pauzy, aby pomóc Ci monitorować postępy w czasie.</p><h2>Skróty klawiaturowe</h2><p>Spacja: Uruchom/Wstrzymaj timer</p><p>R: Resetuj timer</p><p>F: Przełącz pełny ekran</p>"
+            "content": "<h2>Pierwsze kroki</h2><p>Habit Bell to timer w stylu Pomodoro zaprojektowany, aby pomóc Ci budować nawyki poprzez sesje skupionej pracy i regularne przerwy.</p><h2>Jak używać</h2><p>1. Ustaw pożądany czas trwania sesji i interwałów w Ustawieniach.</p><p>2. Naciśnij przycisk odtwarzania, aby uruchomić timer.</p><p>3. Pracuj, aż timer interwału się zakończy.</p><p>4. Zrób krótką przerwę, gdy interwał się skończy.</p><p>5. Kontynuuj, aż sesja zostanie zakończona.</p><h2>Statystyki</h2><p>Habit Bell śledzi Twoje sesje, interwały i pauzy, aby pomóc Ci monitorować postępy w czasie.</p>"
         },
         "about": {
             "title": "O aplikacji",

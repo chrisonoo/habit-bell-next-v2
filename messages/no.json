@@ -64,7 +64,7 @@
     "pages": {
         "help": {
             "title": "Hjelp",
-            "content": "<h2>Komme i gang</h2><p>Habit Bell er en Pomodoro-stil timer designet for å hjelpe deg med å bygge vaner gjennom fokuserte arbeidsøkter og regelmessige pauser.</p><h2>Hvordan bruke</h2><p>1. Sett ønsket varighet for økt og intervall i Innstillinger.</p><p>2. Trykk på avspillingsknappen for å starte timeren.</p><p>3. Arbeid til intervalltimeren er fullført.</p><p>4. Ta en kort pause når intervallet er slutt.</p><p>5. Fortsett til økten er fullført.</p><h2>Statistikk</h2><p>Habit Bell sporer øktene, intervallene og pausene dine for å hjelpe deg med å overvåke fremgangen over tid.</p><h2>Tastatursnarveier</h2><p>Mellomrom: Start/Pause timer</p><p>R: Nullstill timer</p><p>F: Veksle fullskjerm</p>"
+            "content": "<h2>Komme i gang</h2><p>Habit Bell er en Pomodoro-stil timer designet for å hjelpe deg med å bygge vaner gjennom fokuserte arbeidsøkter og regelmessige pauser.</p><h2>Hvordan bruke</h2><p>1. Sett ønsket varighet for økt og intervall i Innstillinger.</p><p>2. Trykk på avspillingsknappen for å starte timeren.</p><p>3. Arbeid til intervalltimeren er fullført.</p><p>4. Ta en kort pause når intervallet er slutt.</p><p>5. Fortsett til økten er fullført.</p><h2>Statistikk</h2><p>Habit Bell sporer øktene, intervallene og pausene dine for å hjelpe deg med å overvåke fremgangen over tid.</p>"
         },
         "about": {
             "title": "Om",

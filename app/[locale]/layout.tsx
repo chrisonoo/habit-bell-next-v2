@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
-import "../globals.css";
 import { ActivityProvider } from "@/contexts/activity-context";
 import { AppSettingsProvider } from "@/contexts/app-settings-context";
 import { locales } from "@/config";
