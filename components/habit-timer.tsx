@@ -460,7 +460,11 @@ export function HabitTimer() {
                 <div className="mt-6 lg:mt-16">
                     <TimerControls
                         isRunning={timerStateRef.current?.isRunning || false}
+                        isSessionEnded={
+                            timerStateRef.current?.sessionTimeLeft === 0
+                        }
                         onToggle={toggleTimer}
+                        onReset={resetTimer}
                     />
                 </div>
             </div>
