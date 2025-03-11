@@ -47,6 +47,7 @@ export function AppDropdownMenu({
     const params = useParams();
     const locale = params.locale as string;
 
+    // Get translations
     const tNav = useTranslations("navigation");
     const tTheme = useTranslations("theme");
     const tLang = useTranslations("language");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import {
     Dialog,
@@ -88,7 +88,7 @@ export function StatisticsDialog({
     /**
      * Load statistics data from IndexedDB
      */
-    const loadStats = async () => {
+    const loadStats = useCallback(async () => {
         try {
             setIsLoading(true);
             const data = await getActivityStats();
@@ -101,7 +101,7 @@ export function StatisticsDialog({
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [getActivityStats, sortDirection]);
 
     /**
      * Reset all activity statistics
