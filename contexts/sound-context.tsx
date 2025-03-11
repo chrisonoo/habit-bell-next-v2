@@ -26,7 +26,18 @@ interface SoundContextType {
 // Default sound sequence played when an interval ends
 export const defaultIntervalEndSequence: SoundSequence = [
     { type: "sound", name: "sound1" },
-    { type: "pause", duration: 5000 },
+    { type: "pause", duration: 1000 },
+    { type: "sound", name: "sound2" },
+    { type: "pause", duration: 800 },
+    { type: "sound", name: "sound2" },
+    { type: "pause", duration: 800 },
+    { type: "sound", name: "sound2" },
+    { type: "pause", duration: 800 },
+    { type: "sound", name: "sound2" },
+    { type: "pause", duration: 800 },
+    { type: "sound", name: "sound2" },
+    { type: "pause", duration: 1000 },
+    { type: "sound", name: "sound3" },
 ];
 
 // Creating context with null value (will be overwritten by provider)

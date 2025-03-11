@@ -49,6 +49,8 @@ export class SoundService {
      */
     private loadDefaultSounds(): void {
         this.loadSound("sound1", "/sounds/sound1.mp3");
+        this.loadSound("sound2", "/sounds/sound2.mp3");
+        this.loadSound("sound3", "/sounds/sound3.mp3");
     }
 
     /**
