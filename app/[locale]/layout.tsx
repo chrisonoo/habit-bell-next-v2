@@ -3,10 +3,12 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { notFound } from "next/navigation";
+import "../globals.css";
 import { ActivityProvider } from "@/contexts/activity-context";
 import { AppSettingsProvider } from "@/contexts/app-settings-context";
 import { locales } from "@/config";
 import { setRequestLocale } from "next-intl/server";
+import { SoundProvider } from "@/contexts/sound-context";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,7 +29,7 @@ export default async function RootLayout({
     children: React.ReactNode;
     params: { locale: string };
 }>) {
-    // Ustawiamy locale dla statycznego renderowania
+    // Set locale for static rendering
     setRequestLocale(locale);
 
     // Validate that the incoming `locale` parameter is valid
@@ -53,7 +55,9 @@ export default async function RootLayout({
                     timeZone="UTC"
                 >
                     <AppSettingsProvider>
-                        <ActivityProvider>{children}</ActivityProvider>
+                        <ActivityProvider>
+                            <SoundProvider>{children}</SoundProvider>
+                        </ActivityProvider>
                     </AppSettingsProvider>
                 </NextIntlClientProvider>
             </body>
