@@ -11,7 +11,7 @@ import {
 import { SoundService, type SoundSequence } from "@/services/sound-service";
 
 /**
- * Interfejs kontekstu dźwiękowego
+ * Sound context interface
  */
 interface SoundContextType {
     isPlaying: boolean;
@@ -29,13 +29,13 @@ export const defaultIntervalEndSequence: SoundSequence = [
     { type: "pause", duration: 2000 },
 ];
 
-// Tworzenie kontekstu z wartością null (będzie nadpisana przez provider)
+// Creating context with null value (will be overwritten by provider)
 const SoundContext = createContext<SoundContextType | null>(null);
 
 /**
- * Hook do używania kontekstu dźwiękowego
- * @returns Kontekst dźwiękowy
- * @throws Error jeśli używany poza SoundProvider
+ * Hook for using sound context
+ * @returns Sound context
+ * @throws Error if used outside of SoundProvider
  */
 export function useSoundContext(): SoundContextType {
     const context = useContext(SoundContext);
@@ -48,35 +48,35 @@ export function useSoundContext(): SoundContextType {
 }
 
 /**
- * Props dla SoundProvider
+ * Props for SoundProvider
  */
 interface SoundProviderProps {
     children: ReactNode;
 }
 
 /**
- * Provider kontekstu dźwiękowego
- * Inicjalizuje serwis dźwiękowy i udostępnia jego funkcje
- * @param children Komponenty potomne
+ * Sound context provider
+ * Initializes sound service and provides its functions
+ * @param children Child components
  */
 export function SoundProvider({ children }: SoundProviderProps) {
-    // Referencja do serwisu dźwiękowego
+    // Reference to the sound service
     const [soundService] = useState<SoundService>(() => new SoundService());
 
-    // Stan odtwarzania
+    // Playback state
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
-    // Efekt do synchronizacji stanu isPlaying z serwisem
+    // Effect to synchronize isPlaying state with the service
     useEffect(() => {
-        // Funkcja do aktualizacji stanu isPlaying
+        // Function to update isPlaying state
         const updatePlayingState = () => {
             setIsPlaying(soundService.getIsPlaying());
         };
 
-        // Aktualizuj stan co 100ms
+        // Update state every 100ms
         const intervalId = setInterval(updatePlayingState, 100);
 
-        // Nasłuchuj na zdarzenie visibilitychange
+        // Listen for visibilitychange event
         const handleVisibilityChange = () => {
             if (document.hidden && soundService.getIsPlaying()) {
                 soundService.stopPlayback();
@@ -96,7 +96,7 @@ export function SoundProvider({ children }: SoundProviderProps) {
         };
     }, [soundService]);
 
-    // Funkcja do odtwarzania dźwięku
+    // Function to play sound
     const playSound = useCallback(
         (name: string) => {
             return soundService.playSound(name);
@@ -104,7 +104,7 @@ export function SoundProvider({ children }: SoundProviderProps) {
         [soundService]
     );
 
-    // Funkcja do odtwarzania sekwencji dźwięków
+    // Function to play sound sequences
     const playSequence = useCallback(
         (sequence: SoundSequence, onEnd?: () => void) => {
             return soundService.playSequence(sequence, onEnd);
@@ -112,12 +112,12 @@ export function SoundProvider({ children }: SoundProviderProps) {
         [soundService]
     );
 
-    // Funkcja do zatrzymywania odtwarzania
+    // Function to stop playback
     const stopPlayback = useCallback(() => {
         soundService.stopPlayback();
     }, [soundService]);
 
-    // Wartość kontekstu
+    // Context value
     const value: SoundContextType = {
         isPlaying,
         playSound,

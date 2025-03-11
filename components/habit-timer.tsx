@@ -123,10 +123,10 @@ export function HabitTimer() {
     // Ref to track whether timer is being manually reset
     const isManualResetRef = useRef(false);
 
-    // Dodaj użycie kontekstu dźwiękowego
+    // Add sound context usage
     const { playSequence, isPlaying: isSoundPlaying } = useSoundContext();
 
-    // Dodaj stan do śledzenia, czy dźwięk jest odtwarzany
+    // Add state to track whether sound is playing
     const [isPlayingSound, setIsPlayingSound] = useState(false);
 
     /**

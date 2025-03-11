@@ -18,7 +18,7 @@ import { useTranslations } from "next-intl";
 interface TimerControlsProps {
     isRunning: boolean;
     isSessionEnded: boolean;
-    isPlayingSound: boolean; // Nowa właściwość
+    isPlayingSound: boolean; // New property
     onToggle: () => void;
     onReset: () => void;
     className?: string;
@@ -77,7 +77,7 @@ export function TimerControls({
                 size="lg"
                 className="rounded-full h-16 w-16"
                 onClick={handleClick}
-                disabled={isPlayingSound} // Blokowanie przycisku podczas odtwarzania dźwięku
+                disabled={isPlayingSound} // Disable button while playing sound
                 aria-label={
                     isSessionEnded
                         ? t("reset")
