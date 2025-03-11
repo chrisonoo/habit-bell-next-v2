@@ -3,6 +3,9 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
+// Dodajemy konfigurację dynamicznego renderowania
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
     params: { locale },
 }: {
