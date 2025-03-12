@@ -10,14 +10,6 @@ import {
 import { useTimerWorker } from "./use-timer-worker";
 
 /**
- * Interface for time values (minutes and seconds)
- */
-export interface TimeValue {
-    minutes: number;
-    seconds: number;
-}
-
-/**
  * Hook for timer controls and state tracking
  *
  * This hook manages the timer state, controls, and associated behaviors
@@ -64,7 +56,7 @@ export function useTimerControls() {
      * Effect to track timer state changes and handle events
      */
     useEffect(() => {
-        if (!timerState) return;
+        if (!timerState || !settings) return;
 
         // Add more debug logs
         console.log(
@@ -75,7 +67,7 @@ export function useTimerControls() {
         const isIntervalReset =
             prevIntervalTimeLeftRef.current !== null &&
             prevIntervalTimeLeftRef.current <= 1 &&
-            timerState.intervalTimeLeft === settings?.intervalDuration;
+            timerState.intervalTimeLeft === settings.intervalDuration;
 
         const isSessionEnd =
             prevSessionTimeLeftRef.current !== null &&
@@ -97,8 +89,8 @@ export function useTimerControls() {
 
         // If session was reset (new session), reset session registration flag
         if (
-            timerState.sessionTimeLeft === settings?.sessionDuration &&
-            prevSessionTimeLeftRef.current !== settings?.sessionDuration
+            timerState.sessionTimeLeft === settings.sessionDuration &&
+            prevSessionTimeLeftRef.current !== settings.sessionDuration
         ) {
             sessionRegisteredRef.current = false;
         }

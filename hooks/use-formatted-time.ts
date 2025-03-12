@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { formatTime } from "@/services/time-service";
-import { useTimerControls } from "./use-timer-controls";
+import { useTimerWorker } from "./use-timer-worker";
 
 /**
  * Interface for time values (minutes and seconds)
@@ -19,7 +19,7 @@ export interface TimeValue {
  * based on the current timer state.
  */
 export function useFormattedTime() {
-    const { timerState, settings } = useTimerControls();
+    const { timerState, settings } = useTimerWorker();
 
     // Format time from current values
     const sessionTime = useMemo(() => {

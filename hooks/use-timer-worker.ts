@@ -26,25 +26,15 @@ export interface TimerSettings {
  * It provides methods to control the timer and access its current state and settings.
  */
 export function useTimerWorker() {
-    // Reference to store timer state from worker
-    const timerStateRef = useRef<TimerState | null>(null);
-
-    // Reference to store timer settings from worker
-    const settingsRef = useRef<TimerSettings | null>(null);
+    // Use state instead of refs for values that should trigger re-renders
+    const [timerState, setTimerState] = useState<TimerState | null>(null);
+    const [settings, setSettings] = useState<TimerSettings | null>(null);
 
     // Web Worker reference
     const workerRef = useRef<Worker | null>(null);
 
     // Flag to track if worker is initialized
     const workerInitializedRef = useRef(false);
-
-    // State to force re-renders when refs change
-    const [, setForceUpdate] = useState(0);
-
-    // Function to force component re-render
-    const forceUpdate = useCallback(() => {
-        setForceUpdate((prev) => prev + 1);
-    }, []);
 
     /**
      * Initialize Web Worker
@@ -81,16 +71,14 @@ export function useTimerWorker() {
 
                 // Handle timer state updates
                 if (type === "UPDATE") {
-                    // Update timer state reference
-                    timerStateRef.current = payload;
-                    forceUpdate();
+                    // Update timer state using setState to trigger re-renders
+                    setTimerState(payload);
                 }
                 // Handle settings updates
                 else if (type === "SETTINGS_UPDATE") {
-                    // Update timer settings reference
-                    settingsRef.current = payload;
+                    // Update timer settings using setState to trigger re-renders
+                    setSettings(payload);
                     console.log("[WORKER_HOOK][04] Settings updated:", payload);
-                    forceUpdate();
                 }
             };
 
@@ -108,7 +96,7 @@ export function useTimerWorker() {
                 workerInitializedRef.current = false;
             }
         };
-    }, [forceUpdate]);
+    }, []);
 
     /**
      * Start the timer
@@ -178,8 +166,8 @@ export function useTimerWorker() {
     }, []);
 
     return {
-        timerState: timerStateRef.current,
-        settings: settingsRef.current,
+        timerState,
+        settings,
         startTimer,
         pauseTimer,
         resetTimer,
@@ -187,7 +175,7 @@ export function useTimerWorker() {
         refreshSettings,
         isInitialized:
             workerInitializedRef.current &&
-            timerStateRef.current !== null &&
-            settingsRef.current !== null,
+            timerState !== null &&
+            settings !== null,
     };
 }
