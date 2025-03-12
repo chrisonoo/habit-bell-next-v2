@@ -12,9 +12,7 @@ import { AppDropdownMenu } from "@/components/app-dropdown-menu";
 import { StatisticsDialog } from "@/components/statistics-dialog";
 import { Statistics } from "@/components/statistics";
 import { useActivityContext } from "@/contexts/activity-context";
-import { useTimerControls } from "@/hooks/use-timer-controls";
-import { useTimerSettings } from "@/hooks/use-timer-settings";
-import { useFormattedTime } from "@/hooks/use-formatted-time";
+import { useTimer } from "@/contexts/timer-context";
 
 /**
  * HabitTimer Component
@@ -22,7 +20,7 @@ import { useFormattedTime } from "@/hooks/use-formatted-time";
  * This is the main component of the application. It:
  * 1. Renders the timer UI
  * 2. Handles user interactions
- * 3. Uses custom hooks for timer logic
+ * 3. Uses the timer context for all timer-related functionality
  *
  * @returns {JSX.Element} The rendered component
  */
@@ -34,7 +32,7 @@ export function HabitTimer() {
     const { todaySessionCount, todayIntervalCount, todayPauseCount } =
         useActivityContext();
 
-    // Use custom hooks for timer functionality
+    // Use timer context
     const {
         timerState,
         isPlayingSound,
@@ -43,21 +41,15 @@ export function HabitTimer() {
         resetTimer,
         toggleFullscreen,
         isInitialized,
-    } = useTimerControls();
-
-    const {
-        isSettingsOpen,
-        setIsSettingsOpen,
-        handleSettingsOpen,
-        handleSaveSettings,
-    } = useTimerSettings();
-
-    const {
         sessionTime,
         intervalTime,
         sessionDurationTime,
         intervalDurationTime,
-    } = useFormattedTime();
+        isSettingsOpen,
+        setIsSettingsOpen,
+        handleSettingsOpen,
+        saveSettings,
+    } = useTimer();
 
     // State for statistics dialog
     const [isStatisticsOpen, setIsStatisticsOpen] = useState(false);
@@ -109,7 +101,7 @@ export function HabitTimer() {
                 <TimerSettingsDialog
                     sessionDuration={sessionDurationTime}
                     intervalDuration={intervalDurationTime}
-                    onSave={handleSaveSettings}
+                    onSave={saveSettings}
                     isOpen={isSettingsOpen}
                     onOpenChange={setIsSettingsOpen}
                 />
