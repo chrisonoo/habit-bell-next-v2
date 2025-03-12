@@ -16,6 +16,7 @@ import { Statistics } from "@/components/statistics";
 import {
     useSoundContext,
     defaultIntervalEndSequence,
+    defaultIntervalWaitingSequence,
 } from "@/contexts/sound-context";
 
 /**
@@ -124,9 +125,18 @@ export function HabitTimer() {
     const isManualResetRef = useRef(false);
 
     // Add sound context usage
-    const { playSequence, isPlaying: isSoundPlaying } = useSoundContext();
+    const {
+        playSequence,
+        playSequenceLoop,
+        stopPlayback,
+        isPlaying: isSoundPlaying,
+    } = useSoundContext();
 
-    // Add state to track whether sound is playing
+    // Add a new state to track which sequence is playing
+    const [isPlayingWaitingSequence, setIsPlayingWaitingSequence] =
+        useState(false);
+
+    // Update the isPlayingSound state to consider both sequences
     const [isPlayingSound, setIsPlayingSound] = useState(false);
 
     /**
@@ -222,7 +232,7 @@ export function HabitTimer() {
                         );
                         registerInterval();
 
-                        // Dodaj automatyczną pauzę timera
+                        // Auto-pause timer
                         if (workerRef.current && payload.isRunning) {
                             console.log(
                                 "[MAIN][DEBUG] Auto-pausing timer for sound playback"
@@ -230,16 +240,36 @@ export function HabitTimer() {
                             workerRef.current.postMessage({ type: "PAUSE" });
                         }
 
-                        // Odtwórz sekwencję dźwięków
+                        // Play the end sequence first
                         setIsPlayingSound(true);
                         playSequence(defaultIntervalEndSequence, () => {
                             console.log(
-                                "[MAIN][DEBUG] Sound sequence completed"
+                                "[MAIN][DEBUG] End sound sequence completed"
                             );
+
+                            // After the end sequence completes, play the waiting sequence in a loop
                             setIsPlayingSound(false);
+                            setIsPlayingWaitingSequence(true);
+
+                            playSequenceLoop(
+                                defaultIntervalWaitingSequence,
+                                10,
+                                () => {
+                                    console.log(
+                                        "[MAIN][DEBUG] Waiting sound sequence loop completed"
+                                    );
+                                    setIsPlayingWaitingSequence(false);
+                                }
+                            ).catch((error) => {
+                                console.error(
+                                    "[MAIN][DEBUG] Error playing waiting sound sequence:",
+                                    error
+                                );
+                                setIsPlayingWaitingSequence(false);
+                            });
                         }).catch((error) => {
                             console.error(
-                                "[MAIN][DEBUG] Error playing sound sequence:",
+                                "[MAIN][DEBUG] Error playing end sound sequence:",
                                 error
                             );
                             setIsPlayingSound(false);
@@ -279,7 +309,13 @@ export function HabitTimer() {
                 workerRef.current.postMessage({ type: "GET_INITIAL_SETTINGS" });
             }
         }
-    }, [registerInterval, registerSession, registerPause, playSequence]);
+    }, [
+        registerInterval,
+        registerSession,
+        registerPause,
+        playSequence,
+        playSequenceLoop,
+    ]);
 
     /**
      * Reset timer to initial state
@@ -292,9 +328,19 @@ export function HabitTimer() {
             isManualResetRef.current = true;
             // Reset session registration flag
             sessionRegisteredRef.current = false;
+
+            // If waiting sequence is playing, stop it
+            if (isPlayingWaitingSequence) {
+                console.log(
+                    "[MAIN][DEBUG] Resetting timer, stopping waiting sequence"
+                );
+                stopPlayback();
+                setIsPlayingWaitingSequence(false);
+            }
+
             workerRef.current.postMessage({ type: "RESET" });
         }
-    }, []);
+    }, [isPlayingWaitingSequence, stopPlayback]);
 
     /**
      * Save settings
@@ -358,6 +404,15 @@ export function HabitTimer() {
         const command = timerStateRef.current.isRunning ? "PAUSE" : "START";
         console.log(`[MAIN][07] Sending ${command} to worker`);
 
+        // If starting timer and waiting sequence is playing, stop it
+        if (command === "START" && isPlayingWaitingSequence) {
+            console.log(
+                "[MAIN][DEBUG] Starting timer, stopping waiting sequence"
+            );
+            stopPlayback();
+            setIsPlayingWaitingSequence(false);
+        }
+
         // If pausing timer, register pause
         if (command === "PAUSE") {
             console.log(
@@ -367,7 +422,7 @@ export function HabitTimer() {
         }
 
         workerRef.current.postMessage({ type: command });
-    }, [registerPause]);
+    }, [registerPause, isPlayingWaitingSequence, stopPlayback]);
 
     /**
      * Toggle fullscreen
@@ -496,7 +551,9 @@ export function HabitTimer() {
                         isSessionEnded={
                             timerStateRef.current?.sessionTimeLeft === 0
                         }
-                        isPlayingSound={isPlayingSound}
+                        isPlayingSound={
+                            isPlayingSound && !isPlayingWaitingSequence
+                        }
                         onToggle={toggleTimer}
                         onReset={resetTimer}
                     />

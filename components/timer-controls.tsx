@@ -31,6 +31,7 @@ interface TimerControlsProps {
  * It maintains a local state that mirrors the isRunning prop to ensure
  * the UI is always in sync with the actual timer state.
  * When the session ends, it displays a reset button instead.
+ * The button is disabled during the end sequence playback but enabled during the waiting sequence.
  *
  * @param {TimerControlsProps} props - Component props
  * @returns {JSX.Element} The rendered component

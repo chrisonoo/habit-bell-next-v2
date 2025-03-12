@@ -20,6 +20,11 @@ interface SoundContextType {
         sequence: SoundSequence,
         onEnd?: () => void
     ) => Promise<void>;
+    playSequenceLoop: (
+        sequence: SoundSequence,
+        maxLoops?: number,
+        onEnd?: () => void
+    ) => Promise<void>;
     stopPlayback: () => void;
 }
 
@@ -38,6 +43,13 @@ export const defaultIntervalEndSequence: SoundSequence = [
     { type: "sound", name: "sound2" },
     { type: "pause", duration: 1000 },
     { type: "sound", name: "sound3" },
+];
+
+// Add the new sequence after the defaultIntervalEndSequence
+// Default sound sequence played when waiting for user to start next interval
+export const defaultIntervalWaitingSequence: SoundSequence = [
+    { type: "sound", name: "sound4" },
+    { type: "pause", duration: 1000 },
 ];
 
 // Creating context with null value (will be overwritten by provider)
@@ -104,6 +116,10 @@ export function SoundProvider({ children }: SoundProviderProps) {
                 "visibilitychange",
                 handleVisibilityChange
             );
+            document.removeEventListener(
+                "visibilitychange",
+                handleVisibilityChange
+            );
         };
     }, [soundService]);
 
@@ -123,16 +139,26 @@ export function SoundProvider({ children }: SoundProviderProps) {
         [soundService]
     );
 
+    // Add the new method to the context value
+    // Function to play sound sequences in a loop
+    const playSequenceLoop = useCallback(
+        (sequence: SoundSequence, maxLoops = 3, onEnd?: () => void) => {
+            return soundService.playSequenceLoop(sequence, maxLoops, onEnd);
+        },
+        [soundService]
+    );
+
     // Function to stop playback
     const stopPlayback = useCallback(() => {
         soundService.stopPlayback();
     }, [soundService]);
 
-    // Context value
+    // Update the context value to include the new method
     const value: SoundContextType = {
         isPlaying,
         playSound,
         playSequence,
+        playSequenceLoop,
         stopPlayback,
     };
 
