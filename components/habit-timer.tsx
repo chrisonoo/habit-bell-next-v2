@@ -329,18 +329,19 @@ export function HabitTimer() {
             // Reset session registration flag
             sessionRegisteredRef.current = false;
 
-            // If waiting sequence is playing, stop it
-            if (isPlayingWaitingSequence) {
+            // Stop any playing sound sequence (both first and second sequence)
+            if (isPlayingSound || isPlayingWaitingSequence) {
                 console.log(
-                    "[MAIN][DEBUG] Resetting timer, stopping waiting sequence"
+                    "[MAIN][DEBUG] Resetting timer, stopping all sound sequences"
                 );
                 stopPlayback();
+                setIsPlayingSound(false);
                 setIsPlayingWaitingSequence(false);
             }
 
             workerRef.current.postMessage({ type: "RESET" });
         }
-    }, [isPlayingWaitingSequence, stopPlayback]);
+    }, [isPlayingSound, isPlayingWaitingSequence, stopPlayback]);
 
     /**
      * Save settings
