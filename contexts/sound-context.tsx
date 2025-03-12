@@ -96,8 +96,8 @@ export function SoundProvider({ children }: SoundProviderProps) {
             setIsPlaying(soundService.getIsPlaying());
         };
 
-        // Update state every 100ms
-        const intervalId = setInterval(updatePlayingState, 100);
+        // Update state every 300ms (increased from 100ms for better performance)
+        const intervalId = setInterval(updatePlayingState, 300);
 
         // Cleanup
         return () => {

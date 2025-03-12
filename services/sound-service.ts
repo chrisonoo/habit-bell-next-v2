@@ -107,10 +107,36 @@ export class SoundService {
             // Reset sound to the beginning (in case of replay)
             audio.currentTime = 0;
 
-            // Play the sound and wait for it to end
-            await audio.play();
+            // Play the sound and handle potential autoplay restrictions
+            const playPromise = audio.play();
 
-            return new Promise((resolve) => {
+            if (playPromise !== undefined) {
+                // Use .then() without returning the promise to avoid type issues
+                await playPromise
+                    .then(() => {
+                        // Play succeeded, wait for it to end
+                        return new Promise<void>((resolve) => {
+                            audio.onended = () => {
+                                console.log(`[SOUND][07] Sound ${name} ended`);
+                                this.isPlaying = false;
+                                resolve(); // Explicitly typed Promise<void> above, so no argument needed
+                            };
+                        });
+                    })
+                    .catch((error) => {
+                        // Play was prevented (e.g., autoplay policy)
+                        console.error(
+                            `[SOUND][08] Browser blocked sound playback: ${error.message}`
+                        );
+                        this.isPlaying = false;
+                        // No need to return anything here
+                    });
+
+                return; // Explicit return to satisfy Promise<void>
+            }
+
+            // Fallback for browsers that don't return a promise from play()
+            return new Promise<void>((resolve) => {
                 audio.onended = () => {
                     console.log(`[SOUND][07] Sound ${name} ended`);
                     this.isPlaying = false;
@@ -211,7 +237,7 @@ export class SoundService {
                 console.log(`[SOUND][11] Pausing for ${item.duration}ms`);
                 this.isPlaying = true;
 
-                return new Promise((resolve) => {
+                return new Promise<void>((resolve) => {
                     this.pauseTimerId = setTimeout(() => {
                         console.log(`[SOUND][12] Pause ended`);
                         this.pauseTimerId = null;
@@ -288,7 +314,7 @@ export class SoundService {
                 console.log(`[SOUND][19] Pausing for ${item.duration}ms`);
                 this.isPlaying = true;
 
-                return new Promise((resolve) => {
+                return new Promise<void>((resolve) => {
                     this.pauseTimerId = setTimeout(() => {
                         console.log(`[SOUND][20] Pause ended`);
                         this.pauseTimerId = null;
