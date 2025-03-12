@@ -6,9 +6,10 @@ import { notFound } from "next/navigation";
 import "../globals.css";
 import { ActivityProvider } from "@/contexts/activity-context";
 import { AppSettingsProvider } from "@/contexts/app-settings-context";
+import { SoundProvider } from "@/contexts/sound-context";
+import { TimerProvider } from "@/contexts/timer-context";
 import { locales } from "@/config";
 import { setRequestLocale } from "next-intl/server";
-import { SoundProvider } from "@/contexts/sound-context";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -56,7 +57,9 @@ export default async function RootLayout({
                 >
                     <AppSettingsProvider>
                         <ActivityProvider>
-                            <SoundProvider>{children}</SoundProvider>
+                            <SoundProvider>
+                                <TimerProvider>{children}</TimerProvider>
+                            </SoundProvider>
                         </ActivityProvider>
                     </AppSettingsProvider>
                 </NextIntlClientProvider>

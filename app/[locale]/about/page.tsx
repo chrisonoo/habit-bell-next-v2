@@ -36,12 +36,12 @@ export default async function AboutPage({
     const content = t.raw("content");
 
     return (
-        <div className="min-h-screen bg-background text-foreground">
-            <div className="container mx-auto py-8">
+        <div className="min-h-screen bg-background text-foreground flex justify-center">
+            <div className="w-full max-w-3xl px-4 py-8">
                 <div className="mb-6">
                     <Link href={`/${locale}`}>
                         <Button variant="ghost" size="icon" className="-ml-3">
-                            <ArrowLeft className="!h-6 !w-6" />
+                            <ArrowLeft className="!h-8 !w-8" />
                             <span className="sr-only">Back to timer</span>
                         </Button>
                     </Link>

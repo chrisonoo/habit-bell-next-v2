@@ -35,6 +35,10 @@ export class SoundService {
     // Callback function called when sequence playback ends
     private onSequenceEndCallback: (() => void) | null = null;
 
+    // Add a new property to track loop playback
+    private loopCount = 0;
+    private maxLoops = 0;
+
     /**
      * Sound service constructor
      * Initializes the service and loads default sounds
@@ -51,6 +55,7 @@ export class SoundService {
         this.loadSound("sound1", "/sounds/sound1.mp3");
         this.loadSound("sound2", "/sounds/sound2.mp3");
         this.loadSound("sound3", "/sounds/sound3.mp3");
+        this.loadSound("sound4", "/sounds/sound4.mp3");
     }
 
     /**
@@ -102,10 +107,36 @@ export class SoundService {
             // Reset sound to the beginning (in case of replay)
             audio.currentTime = 0;
 
-            // Play the sound and wait for it to end
-            await audio.play();
+            // Play the sound and handle potential autoplay restrictions
+            const playPromise = audio.play();
 
-            return new Promise((resolve) => {
+            if (playPromise !== undefined) {
+                // Use .then() without returning the promise to avoid type issues
+                await playPromise
+                    .then(() => {
+                        // Play succeeded, wait for it to end
+                        return new Promise<void>((resolve) => {
+                            audio.onended = () => {
+                                console.log(`[SOUND][07] Sound ${name} ended`);
+                                this.isPlaying = false;
+                                resolve(); // Explicitly typed Promise<void> above, so no argument needed
+                            };
+                        });
+                    })
+                    .catch((error) => {
+                        // Play was prevented (e.g., autoplay policy)
+                        console.error(
+                            `[SOUND][08] Browser blocked sound playback: ${error.message}`
+                        );
+                        this.isPlaying = false;
+                        // No need to return anything here
+                    });
+
+                return; // Explicit return to satisfy Promise<void>
+            }
+
+            // Fallback for browsers that don't return a promise from play()
+            return new Promise<void>((resolve) => {
                 audio.onended = () => {
                     console.log(`[SOUND][07] Sound ${name} ended`);
                     this.isPlaying = false;
@@ -144,6 +175,34 @@ export class SoundService {
     }
 
     /**
+     * Plays a sequence of sounds in a loop
+     * @param sequence Sequence of sounds to play
+     * @param maxLoops Maximum number of loops (0 for infinite)
+     * @param onEnd Optional callback function called when the sequence ends
+     * @returns Promise resolved when the sequence playback ends
+     */
+    public async playSequenceLoop(
+        sequence: SoundSequence,
+        maxLoops = 3,
+        onEnd?: () => void
+    ): Promise<void> {
+        // Stop currently playing sequence, if any
+        this.stopPlayback();
+
+        this.currentSequence = sequence;
+        this.currentSequenceIndex = 0;
+        this.onSequenceEndCallback = onEnd || null;
+        this.loopCount = 0;
+        this.maxLoops = maxLoops;
+
+        console.log(
+            `[SOUND][15] Starting sequence loop with ${sequence.length} items, max loops: ${maxLoops}`
+        );
+
+        return this.playNextInSequenceLoop();
+    }
+
+    /**
      * Plays the next item in the sequence
      * @returns Promise resolved when the entire sequence playback ends
      */
@@ -178,7 +237,7 @@ export class SoundService {
                 console.log(`[SOUND][11] Pausing for ${item.duration}ms`);
                 this.isPlaying = true;
 
-                return new Promise((resolve) => {
+                return new Promise<void>((resolve) => {
                     this.pauseTimerId = setTimeout(() => {
                         console.log(`[SOUND][12] Pause ended`);
                         this.pauseTimerId = null;
@@ -191,6 +250,85 @@ export class SoundService {
             this.isPlaying = false;
 
             // Call the callback after sequence ends (even in case of error)
+            if (this.onSequenceEndCallback) {
+                this.onSequenceEndCallback();
+                this.onSequenceEndCallback = null;
+            }
+
+            return Promise.reject(error);
+        }
+    }
+
+    /**
+     * Plays the next item in the sequence with loop support
+     * @returns Promise resolved when the entire sequence playback ends
+     */
+    private async playNextInSequenceLoop(): Promise<void> {
+        if (!this.currentSequence) {
+            console.log(`[SOUND][16] No sequence to play`);
+            this.isPlaying = false;
+
+            if (this.onSequenceEndCallback) {
+                this.onSequenceEndCallback();
+                this.onSequenceEndCallback = null;
+            }
+
+            return Promise.resolve();
+        }
+
+        // If we reached the end of the sequence
+        if (this.currentSequenceIndex >= this.currentSequence.length) {
+            this.loopCount++;
+            console.log(`[SOUND][17] Loop ${this.loopCount} completed`);
+
+            // Check if we reached the maximum number of loops
+            if (this.maxLoops > 0 && this.loopCount >= this.maxLoops) {
+                console.log(
+                    `[SOUND][18] Maximum number of loops (${this.maxLoops}) reached`
+                );
+                this.isPlaying = false;
+
+                if (this.onSequenceEndCallback) {
+                    this.onSequenceEndCallback();
+                    this.onSequenceEndCallback = null;
+                }
+
+                return Promise.resolve();
+            }
+
+            // Reset index to start the sequence again
+            this.currentSequenceIndex = 0;
+        }
+
+        const item = this.currentSequence[this.currentSequenceIndex];
+        this.currentSequenceIndex++;
+
+        try {
+            if (item.type === "sound") {
+                // Play the sound
+                await this.playSound(item.name);
+                // After the sound ends, play the next item
+                return this.playNextInSequenceLoop();
+            } else if (item.type === "pause") {
+                // Introduce a pause
+                console.log(`[SOUND][19] Pausing for ${item.duration}ms`);
+                this.isPlaying = true;
+
+                return new Promise<void>((resolve) => {
+                    this.pauseTimerId = setTimeout(() => {
+                        console.log(`[SOUND][20] Pause ended`);
+                        this.pauseTimerId = null;
+                        resolve(this.playNextInSequenceLoop());
+                    }, item.duration);
+                });
+            }
+        } catch (error) {
+            console.error(
+                `[SOUND][21] Error in sequence loop playback:`,
+                error
+            );
+            this.isPlaying = false;
+
             if (this.onSequenceEndCallback) {
                 this.onSequenceEndCallback();
                 this.onSequenceEndCallback = null;
