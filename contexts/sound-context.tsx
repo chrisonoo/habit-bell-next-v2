@@ -99,27 +99,9 @@ export function SoundProvider({ children }: SoundProviderProps) {
         // Update state every 100ms
         const intervalId = setInterval(updatePlayingState, 100);
 
-        // Listen for visibilitychange event
-        const handleVisibilityChange = () => {
-            if (document.hidden && soundService.getIsPlaying()) {
-                soundService.stopPlayback();
-                updatePlayingState();
-            }
-        };
-
-        document.addEventListener("visibilitychange", handleVisibilityChange);
-
         // Cleanup
         return () => {
             clearInterval(intervalId);
-            document.removeEventListener(
-                "visibilitychange",
-                handleVisibilityChange
-            );
-            document.removeEventListener(
-                "visibilitychange",
-                handleVisibilityChange
-            );
         };
     }, [soundService]);
 
