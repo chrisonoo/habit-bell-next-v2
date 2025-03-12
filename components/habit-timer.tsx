@@ -35,6 +35,7 @@ export function HabitTimer() {
     // Use timer context
     const {
         timerState,
+        settings,
         isPlayingSound,
         isPlayingWaitingSequence,
         toggleTimer,
@@ -63,8 +64,17 @@ export function HabitTimer() {
         );
     }
 
-    // Determine if the timer is paused (either manually or automatically)
-    const isTimerPaused = timerState ? !timerState.isRunning : false;
+    // We check if the timer is in the initial state (after the reset)
+    const isInitialState =
+        timerState &&
+        settings &&
+        timerState.sessionTimeLeft === settings.sessionDuration &&
+        timerState.intervalTimeLeft === settings.intervalDuration;
+
+    // Timer should pulsate only when it is stained, but is not in the initial state
+    const shouldPulse = timerState
+        ? !timerState.isRunning && !isInitialState
+        : false;
 
     return (
         <div className="relative flex flex-col items-center justify-between min-h-screen overflow-hidden">
@@ -124,12 +134,12 @@ export function HabitTimer() {
             {/* Main Content - Timer Displays */}
             <div className="flex-1 flex flex-col items-center justify-center w-full mt-16 mb-8">
                 <div className="flex flex-col items-center justify-center">
-                    {/* Main Timer Display (Interval) - We add pulsing animation when the timer is stained */}
+                    {/* Main Timer Display (INTERVAL) - only pulsates when the timer is stained during action */}
                     <TimerDisplay
                         minutes={intervalTime.minutes}
                         seconds={intervalTime.seconds}
                         size="large"
-                        isPulsing={isTimerPaused} // Przekazujemy informację o pauzie
+                        isPulsing={shouldPulse}
                     />
 
                     {/* Secondary Timer Display (Session) - Bez animacji */}

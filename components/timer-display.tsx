@@ -28,8 +28,7 @@ export function TimerDisplay({
                     ? "text-[6rem] lg:text-[12rem] leading-none"
                     : "text-[2.5rem] lg:text-[3.5rem] leading-tight",
                 color,
-                isPulsing && "timer-pulse", // We add animation class when iSpulsing is true
-                className
+                isPulsing && "timer-pulse"
             )}
             aria-live={size === "large" ? "polite" : "off"}
             role="timer"
