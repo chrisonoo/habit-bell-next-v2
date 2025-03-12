@@ -63,6 +63,9 @@ export function HabitTimer() {
         );
     }
 
+    // Determine if the timer is paused (either manually or automatically)
+    const isTimerPaused = timerState ? !timerState.isRunning : false;
+
     return (
         <div className="relative flex flex-col items-center justify-between min-h-screen overflow-hidden">
             {/* Statistics Component */}
@@ -121,14 +124,15 @@ export function HabitTimer() {
             {/* Main Content - Timer Displays */}
             <div className="flex-1 flex flex-col items-center justify-center w-full mt-16 mb-8">
                 <div className="flex flex-col items-center justify-center">
-                    {/* Main Timer Display (Interval) */}
+                    {/* Main Timer Display (Interval) - We add pulsing animation when the timer is stained */}
                     <TimerDisplay
                         minutes={intervalTime.minutes}
                         seconds={intervalTime.seconds}
                         size="large"
+                        isPulsing={isTimerPaused} // Przekazujemy informację o pauzie
                     />
 
-                    {/* Secondary Timer Display (Session) */}
+                    {/* Secondary Timer Display (Session) - Bez animacji */}
                     <TimerDisplay
                         minutes={sessionTime.minutes}
                         seconds={sessionTime.seconds}

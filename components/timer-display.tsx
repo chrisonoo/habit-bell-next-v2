@@ -6,6 +6,7 @@ interface TimerDisplayProps {
     className?: string;
     size?: "large" | "small";
     color?: string;
+    isPulsing?: boolean; // New prop to control animations
 }
 
 export function TimerDisplay({
@@ -14,6 +15,7 @@ export function TimerDisplay({
     className,
     size = "large",
     color = "text-foreground",
+    isPulsing = false, // By default, the animation is turned off
 }: TimerDisplayProps) {
     const formattedMinutes = String(minutes).padStart(2, "0");
     const formattedSeconds = String(seconds).padStart(2, "0");
@@ -26,6 +28,7 @@ export function TimerDisplay({
                     ? "text-[6rem] lg:text-[12rem] leading-none"
                     : "text-[2.5rem] lg:text-[3.5rem] leading-tight",
                 color,
+                isPulsing && "timer-pulse", // We add animation class when iSpulsing is true
                 className
             )}
             aria-live={size === "large" ? "polite" : "off"}
