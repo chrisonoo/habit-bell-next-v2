@@ -83,20 +83,27 @@ interface SoundProviderProps {
  * @param children Child components
  */
 export function SoundProvider({ children }: SoundProviderProps) {
-    // Reference to the sound service
-    const [soundService] = useState<SoundService>(() => new SoundService());
+    // Reference to the sound service, initialized to null on the server
+    const [soundService, setSoundService] = useState<SoundService | null>(null);
 
     // Playback state
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
+    // Initialize sound service on the client side
+    useEffect(() => {
+        setSoundService(new SoundService());
+    }, []);
+
     // Effect to synchronize isPlaying state with the service
     useEffect(() => {
+        if (!soundService) return;
+
         // Function to update isPlaying state
         const updatePlayingState = () => {
             setIsPlaying(soundService.getIsPlaying());
         };
 
-        // Update state every 300ms (increased from 100ms for better performance)
+        // Update state every 300ms
         const intervalId = setInterval(updatePlayingState, 300);
 
         // Cleanup
@@ -108,6 +115,7 @@ export function SoundProvider({ children }: SoundProviderProps) {
     // Function to play sound
     const playSound = useCallback(
         (name: string) => {
+            if (!soundService) return Promise.resolve();
             return soundService.playSound(name);
         },
         [soundService]
@@ -116,15 +124,16 @@ export function SoundProvider({ children }: SoundProviderProps) {
     // Function to play sound sequences
     const playSequence = useCallback(
         (sequence: SoundSequence, onEnd?: () => void) => {
+            if (!soundService) return Promise.resolve();
             return soundService.playSequence(sequence, onEnd);
         },
         [soundService]
     );
 
-    // Add the new method to the context value
     // Function to play sound sequences in a loop
     const playSequenceLoop = useCallback(
         (sequence: SoundSequence, maxLoops = 3, onEnd?: () => void) => {
+            if (!soundService) return Promise.resolve();
             return soundService.playSequenceLoop(sequence, maxLoops, onEnd);
         },
         [soundService]
@@ -132,10 +141,10 @@ export function SoundProvider({ children }: SoundProviderProps) {
 
     // Function to stop playback
     const stopPlayback = useCallback(() => {
+        if (!soundService) return;
         soundService.stopPlayback();
     }, [soundService]);
 
-    // Update the context value to include the new method
     const value: SoundContextType = {
         isPlaying,
         playSound,
