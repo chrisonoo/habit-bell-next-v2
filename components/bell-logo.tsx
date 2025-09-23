@@ -1,5 +1,9 @@
 import { Bell } from "lucide-react";
 
+/**
+ * Renders the application's logo, which consists of a bell icon and the name "Habit Bell".
+ * This component is positioned absolutely at the top of the viewport on larger screens.
+ */
 export function BellLogo() {
     return (
         <div className="absolute top-6 lg:top-9 z-10 hidden lg:block">

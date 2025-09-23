@@ -33,11 +33,24 @@ import {
 import Link from "next/link";
 import { useParams } from "next/navigation";
 
+/**
+ * Defines the props for the AppDropdownMenu component.
+ */
 interface AppDropdownMenuProps {
+    /** A callback function to be invoked when the "Statistics" menu item is clicked. */
     onOpenStatistics: () => void;
+    /** A callback function to be invoked when the "Settings" menu item is clicked. */
     onOpenSettings: () => void;
 }
 
+/**
+ * Renders the main application dropdown menu.
+ * This menu provides navigation to various parts of the application like Statistics,
+ * Settings, Help, and About pages. It also contains submenus for changing the
+ * application's theme and language.
+ *
+ * @param {AppDropdownMenuProps} props - The props for the component.
+ */
 export function AppDropdownMenu({
     onOpenStatistics,
     onOpenSettings,
@@ -47,33 +60,45 @@ export function AppDropdownMenu({
     const params = useParams();
     const locale = params.locale as string;
 
-    // Get translations
+    // Translations for various UI elements.
     const tNav = useTranslations("navigation");
     const tTheme = useTranslations("theme");
     const tLang = useTranslations("language");
     const tAccess = useTranslations("accessibility");
 
-    // Function to handle menu item click
+    /**
+     * @private Handles clicks on menu items that trigger actions (like opening dialogs).
+     * It closes the menu and then executes the provided action.
+     * @param {() => void} action - The function to execute.
+     */
     const handleMenuItemClick = (action: () => void) => {
-        // Close menu
         setIsOpen(false);
-        // Execute action
         action();
     };
 
-    // Function to handle theme change
+    /**
+     * @private Handles changing the application theme.
+     * @param {ThemeType} newTheme - The new theme to set.
+     */
     const handleThemeChange = (newTheme: ThemeType) => {
         setTheme(newTheme);
         setIsOpen(false);
     };
 
-    // Function to handle language change
+    /**
+     * @private Handles changing the application language.
+     * @param {LanguageType} newLanguage - The new language to set.
+     */
     const handleLanguageChange = (newLanguage: LanguageType) => {
         setLanguage(newLanguage);
         setIsOpen(false);
     };
 
-    // Function to display language name
+    /**
+     * @private Gets the display name for a given language code.
+     * @param {LanguageType} lang - The language code.
+     * @returns {string} The translated language name.
+     */
     const getLanguageName = (lang: LanguageType): string => {
         switch (lang) {
             case "en":
@@ -87,7 +112,10 @@ export function AppDropdownMenu({
         }
     };
 
-    // Function to display icon for currently selected language
+    /**
+     * @private Gets the emoji icon for the currently selected language.
+     * @returns {string} The flag emoji.
+     */
     const getLanguageIcon = () => {
         switch (language) {
             case "en":

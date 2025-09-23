@@ -11,20 +11,17 @@ import { useTimer } from "@/contexts/timer-context";
 import { TimerControlsTopRight } from "@/components/timer-controls-top-right";
 
 /**
- * HabitTimer Component
+ * The main component of the application, responsible for orchestrating the entire timer interface.
+ * It brings together the timer displays, controls, and other UI elements like statistics and settings.
+ * The core logic is handled by the `useTimer` hook, which provides the state and control functions.
  *
- * This is the main component of the application. It:
- * 1. Renders the timer UI
- * 2. Handles user interactions
- * 3. Uses the timer context for all timer-related functionality
- *
- * @returns {JSX.Element} The rendered component
+ * @returns {JSX.Element} The rendered HabitTimer component.
  */
 export function HabitTimer() {
-    // Get translations
+    // Hook for getting translated strings.
     const t = useTranslations("timer");
 
-    // Use timer context
+    // Destructure all necessary state and functions from the TimerContext.
     const {
         timerState,
         settings,
@@ -38,7 +35,7 @@ export function HabitTimer() {
         intervalTime,
     } = useTimer();
 
-    // Show loading screen until data is fetched from worker
+    // While the timer and settings are being loaded from the worker, show an initializing message.
     if (!isInitialized) {
         return (
             <div className="flex items-center justify-center min-h-screen">
@@ -47,30 +44,32 @@ export function HabitTimer() {
         );
     }
 
-    // We check if the timer is in the initial state (after the reset)
+    // Determine if the timer is in its pristine, initial state (e.g., after a reset or on first load).
     const isInitialState =
         timerState &&
         settings &&
         timerState.sessionTimeLeft === settings.sessionDuration &&
         timerState.intervalTimeLeft === settings.intervalDuration;
 
-    // Timer should pulsate only when it is stained, but is not in the initial state
+    // Determine if the main timer display should have a pulsing animation.
+    // This happens when the timer is paused but not in its initial state.
     const shouldPulse = timerState
         ? !timerState.isRunning && !isInitialState
         : false;
 
     return (
+        // Main container for the timer view.
         <div className="relative flex flex-col items-center justify-between min-h-screen overflow-hidden">
-            {/* Statistics Component */}
+            {/* Top-left component displaying today's statistics. */}
             <Statistics />
 
-            {/* Logo */}
+            {/* Centered top logo. */}
             <BellLogo />
 
-            {/* Top Right Controls */}
+            {/* Top-right controls including reset and the main dropdown menu. */}
             <TimerControlsTopRight />
 
-            {/* Fullscreen Button (Bottom Right) */}
+            {/* Bottom-right button to toggle fullscreen mode. */}
             <Button
                 variant="ghost"
                 size="icon"
@@ -81,10 +80,10 @@ export function HabitTimer() {
                 <span className="sr-only">{t("fullscreen")}</span>
             </Button>
 
-            {/* Main Content - Timer Displays */}
+            {/* Central content area holding the timer displays and main controls. */}
             <div className="flex-1 flex flex-col items-center justify-center w-full mt-16 mb-8">
                 <div className="flex flex-col items-center justify-center">
-                    {/* Main Timer Display (INTERVAL) - only pulsates when the timer is stained during action */}
+                    {/* The primary, large timer display showing the current interval time. */}
                     <TimerDisplay
                         minutes={intervalTime.minutes}
                         seconds={intervalTime.seconds}
@@ -92,7 +91,7 @@ export function HabitTimer() {
                         isPulsing={shouldPulse}
                     />
 
-                    {/* Secondary Timer Display (Session) - Bez animacji */}
+                    {/* The secondary, smaller timer display showing the total session time remaining. */}
                     <TimerDisplay
                         minutes={sessionTime.minutes}
                         seconds={sessionTime.seconds}
@@ -102,7 +101,7 @@ export function HabitTimer() {
                     />
                 </div>
 
-                {/* Timer Controls (Center Bottom) */}
+                {/* The main play/pause/reset controls at the bottom center. */}
                 <div className="mt-6 lg:mt-16">
                     <TimerControls
                         isRunning={timerState?.isRunning || false}

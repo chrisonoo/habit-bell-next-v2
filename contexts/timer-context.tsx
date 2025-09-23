@@ -19,71 +19,97 @@ import {
 import { formatTime } from "@/services/time-service";
 
 /**
- * Interface for timer state managed by worker
+ * Defines the shape of the timer's state, which is managed by the Web Worker.
  */
 export interface TimerState {
+    /** @property {number} sessionTimeLeft - The remaining time for the current session, in seconds. */
     sessionTimeLeft: number;
+    /** @property {number} intervalTimeLeft - The remaining time for the current interval, in seconds. */
     intervalTimeLeft: number;
+    /** @property {boolean} isRunning - A flag indicating if the timer is currently running. */
     isRunning: boolean;
 }
 
 /**
- * Interface for timer settings
+ * Defines the shape of the timer's settings.
  */
 export interface TimerSettings {
+    /** @property {number} sessionDuration - The total duration of a session, in seconds. */
     sessionDuration: number;
+    /** @property {number} intervalDuration - The total duration of an interval, in seconds. */
     intervalDuration: number;
 }
 
 /**
- * Interface for time values (minutes and seconds)
+ * Defines a structured time value, separated into minutes and seconds.
  */
 export interface TimeValue {
+    /** @property {number} minutes - The minutes component of the time. */
     minutes: number;
+    /** @property {number} seconds - The seconds component of the time. */
     seconds: number;
 }
 
 /**
- * Interface for the timer context
+ * Defines the shape of the Timer Context.
+ * It provides access to the timer's state, settings, formatted time values,
+ * and functions to control the timer.
  */
 interface TimerContextType {
-    // Timer state
+    /** The current state of the timer (time left, running status). Null if not initialized. */
     timerState: TimerState | null;
+    /** The current settings of the timer (durations). Null if not initialized. */
     settings: TimerSettings | null;
+    /** A flag indicating if the timer and its worker have been initialized. */
     isInitialized: boolean;
 
-    // Formatted time values
+    /** The remaining session time, formatted as minutes and seconds. */
     sessionTime: TimeValue;
+    /** The remaining interval time, formatted as minutes and seconds. */
     intervalTime: TimeValue;
+    /** The total session duration, formatted as minutes and seconds. */
     sessionDurationTime: TimeValue;
+    /** The total interval duration, formatted as minutes and seconds. */
     intervalDurationTime: TimeValue;
 
-    // Sound playback state
+    /** A flag indicating if the interval-end sound sequence is currently playing. */
     isPlayingSound: boolean;
+    /** A flag indicating if the interval-waiting sound sequence is currently playing. */
     isPlayingWaitingSequence: boolean;
 
-    // Timer controls
+    /** A function to start the timer. */
     startTimer: () => void;
+    /** A function to pause the timer. */
     pauseTimer: () => void;
+    /** A function to reset the timer to its initial state. */
     resetTimer: () => void;
+    /** A function to toggle the timer between running and paused states. */
     toggleTimer: () => void;
+    /** A function to toggle the browser's fullscreen mode. */
     toggleFullscreen: () => void;
 
-    // Settings controls
+    /** A flag indicating if the settings dialog is open. */
     isSettingsOpen: boolean;
+    /** A function to set the visibility of the settings dialog. */
     setIsSettingsOpen: (open: boolean) => void;
+    /** A function to handle opening the settings dialog, ensuring settings are fresh. */
     handleSettingsOpen: () => void;
+    /** A function to save new timer settings. */
     saveSettings: (
         sessionDuration: TimeValue,
         intervalDuration: TimeValue
     ) => void;
 }
 
-// Create context with default values
+/**
+ * The React Context object for the timer.
+ */
 const TimerContext = createContext<TimerContextType | null>(null);
 
 /**
- * Hook to use the timer context
+ * A custom hook to easily access the TimerContext.
+ * @returns {TimerContextType} The timer context.
+ * @throws {Error} If used outside of a `TimerProvider`.
  */
 export function useTimer() {
     const context = useContext(TimerContext);
@@ -94,16 +120,18 @@ export function useTimer() {
 }
 
 /**
- * Timer Provider props
+ * Defines the props for the TimerProvider component.
  */
 interface TimerProviderProps {
+    /** @property {ReactNode} children - The child components that will have access to this context. */
     children: ReactNode;
 }
 
+// --- Reducer for state management --- //
+
 /**
- * Timer Provider component
+ * @private Defines the shape of the state managed by the timerReducer.
  */
-// Reducer state
 interface TimerProviderState {
     timerState: TimerState | null;
     settings: TimerSettings | null;
@@ -112,7 +140,9 @@ interface TimerProviderState {
     isPlayingWaitingSequence: boolean;
 }
 
-// Reducer actions
+/**
+ * @private Defines the actions that can be dispatched to the timerReducer.
+ */
 type Action =
     | { type: "SET_TIMER_STATE"; payload: TimerState }
     | { type: "SET_SETTINGS"; payload: TimerSettings }
@@ -120,7 +150,9 @@ type Action =
     | { type: "SET_IS_PLAYING_SOUND"; payload: boolean }
     | { type: "SET_IS_PLAYING_WAITING_SEQUENCE"; payload: boolean };
 
-// Initial state for the reducer
+/**
+ * @private The initial state for the timerReducer.
+ */
 const initialState: TimerProviderState = {
     timerState: null,
     settings: null,
@@ -129,7 +161,10 @@ const initialState: TimerProviderState = {
     isPlayingWaitingSequence: false,
 };
 
-// Reducer function
+/**
+ * @private The reducer function to manage the state of the TimerProvider.
+ * It handles updates to the timer state, settings, and other UI flags.
+ */
 function timerReducer(
     state: TimerProviderState,
     action: Action
@@ -150,12 +185,19 @@ function timerReducer(
     }
 }
 
+/**
+ * The provider component for the TimerContext.
+ * This component orchestrates the entire timer functionality. It communicates with a Web Worker
+ * for accurate background timing, interacts with the ActivityContext to log user progress,
+ * and uses the SoundContext to play audio cues.
+ */
 export function TimerProvider({ children }: TimerProviderProps) {
-    // Worker references
+    // A ref to hold the Web Worker instance.
     const workerRef = useRef<Worker | null>(null);
+    // A ref to track if the worker has been initialized to prevent re-initialization.
     const workerInitializedRef = useRef(false);
 
-    // Use reducer for state management
+    // Use a reducer for centralized state management within the provider.
     const [state, dispatch] = useReducer(timerReducer, initialState);
     const {
         timerState,
@@ -165,23 +207,26 @@ export function TimerProvider({ children }: TimerProviderProps) {
         isPlayingWaitingSequence,
     } = state;
 
-    // Get activity registration functions from context
+    // Get contexts for activity and sound to interact with them.
     const { registerPause, registerInterval, registerSession } =
         useActivityContext();
-
-    // Add sound context usage
     const { playSequence, playSequenceLoop, stopPlayback } = useSoundContext();
 
-    // Refs for tracking state changes
+    // --- Refs for tracking state changes and side effects --- //
+    // Ref to track the previous running state to detect start/pause transitions.
     const wasRunningRef = useRef(false);
+    // Ref to track the previous interval time to detect when an interval completes.
     const prevIntervalTimeLeftRef = useRef<number | null>(null);
+    // Ref to track the previous session time to detect when a session completes.
     const prevSessionTimeLeftRef = useRef<number | null>(null);
+    // Ref to prevent multiple session registrations for the same session completion.
     const sessionRegisteredRef = useRef(false);
+    // Ref to distinguish between an automatic reset (e.g., after settings change) and a user-triggered reset.
     const isManualResetRef = useRef(false);
 
-
     /**
-     * Initialize Web Worker
+     * An effect hook to initialize and terminate the Web Worker.
+     * This runs only once on component mount.
      */
     useEffect(() => {
         // Create worker only on client side and only once
@@ -246,28 +291,31 @@ export function TimerProvider({ children }: TimerProviderProps) {
     }, []);
 
     /**
-     * Effect to track timer state changes and handle events
+     * An effect hook that runs whenever the timer's state changes.
+     * This is the core logic for triggering events like registering activities
+     * and playing sounds when intervals or sessions complete.
      */
     useEffect(() => {
+        // Guard against running before initialization
         if (!timerState || !settings) return;
 
-        // Add more debug logs
-        console.log(
-            `[TIMER_CONTEXT][05] Timer state change: wasRunning=${wasRunningRef.current}, isNowRunning=${timerState.isRunning}, sessionTimeLeft=${timerState.sessionTimeLeft}, intervalTimeLeft=${timerState.intervalTimeLeft}`
-        );
+        // --- Event Detection Logic ---
 
-        // Check if interval has ended (reset to full value or session end)
+        // Detects if an interval has just finished and reset.
         const isIntervalReset =
             prevIntervalTimeLeftRef.current !== null &&
             prevIntervalTimeLeftRef.current <= 1 &&
             timerState.intervalTimeLeft === settings.intervalDuration;
 
+        // Detects if the entire session has just finished.
         const isSessionEnd =
             prevSessionTimeLeftRef.current !== null &&
             prevSessionTimeLeftRef.current > 0 &&
             timerState.sessionTimeLeft === 0;
 
-        // Check if session has ended
+        // --- Event Handling Logic ---
+
+        // Handle session completion: register the activity.
         if (
             isSessionEnd &&
             !sessionRegisteredRef.current &&
@@ -277,10 +325,10 @@ export function TimerProvider({ children }: TimerProviderProps) {
                 "[TIMER_CONTEXT][06] Session completed, registering session"
             );
             registerSession();
-            sessionRegisteredRef.current = true;
+            sessionRegisteredRef.current = true; // Prevents re-registration
         }
 
-        // If session was reset (new session), reset session registration flag
+        // Reset the session registration flag if the timer is reset to a new session.
         if (
             timerState.sessionTimeLeft === settings.sessionDuration &&
             prevSessionTimeLeftRef.current !== settings.sessionDuration
@@ -288,45 +336,36 @@ export function TimerProvider({ children }: TimerProviderProps) {
             sessionRegisteredRef.current = false;
         }
 
-        // Check if interval has ended - adding condition !isManualResetRef.current
+        // Handle interval completion: register activity and play sounds.
         if (
             (isIntervalReset ||
                 (isSessionEnd && timerState.intervalTimeLeft === 0)) &&
             wasRunningRef.current &&
-            !isManualResetRef.current
+            !isManualResetRef.current // Ignore if reset was user-initiated
         ) {
             console.log(
-                "[TIMER_CONTEXT][07] Interval completed, registering interval. Reset:",
-                isIntervalReset,
-                "Session end:",
-                isSessionEnd
+                "[TIMER_CONTEXT][07] Interval completed, registering interval."
             );
             registerInterval();
 
-            // Auto-pause timer
+            // Auto-pause the timer to allow sounds to play without the timer ticking.
             if (timerState.isRunning) {
-                console.log(
-                    "[TIMER_CONTEXT][08] Auto-pausing timer for sound playback"
-                );
                 pauseTimer();
             }
 
-            // Play the end sequence first
+            // Play the two-part sound sequence for interval completion.
             dispatch({ type: "SET_IS_PLAYING_SOUND", payload: true });
             playSequence(defaultIntervalEndSequence, () => {
-                console.log("[TIMER_CONTEXT][09] End sound sequence completed");
-
-                // After the end sequence completes, play the waiting sequence in a loop
+                // This callback runs after the first sequence (end sound) completes.
                 dispatch({ type: "SET_IS_PLAYING_SOUND", payload: false });
                 dispatch({
                     type: "SET_IS_PLAYING_WAITING_SEQUENCE",
                     payload: true,
                 });
 
+                // Start the second sequence (waiting sound) in a loop.
                 playSequenceLoop(defaultIntervalWaitingSequence, 10, () => {
-                    console.log(
-                        "[TIMER_CONTEXT][10] Waiting sound sequence loop completed"
-                    );
+                    // This callback runs after the waiting loop finishes.
                     dispatch({
                         type: "SET_IS_PLAYING_WAITING_SEQUENCE",
                         payload: false,
@@ -350,14 +389,14 @@ export function TimerProvider({ children }: TimerProviderProps) {
             });
         }
 
-        // Reset manual reset flag after processing update
+        // --- State Maintenance ---
+
+        // Reset the manual reset flag after this render cycle.
         isManualResetRef.current = false;
 
-        // Save current values for comparison at next update
+        // Store current values in refs to compare in the next render.
         prevIntervalTimeLeftRef.current = timerState.intervalTimeLeft;
         prevSessionTimeLeftRef.current = timerState.sessionTimeLeft;
-
-        // Update ref tracking timer state
         wasRunningRef.current = timerState.isRunning;
     }, [
         timerState,
@@ -366,10 +405,11 @@ export function TimerProvider({ children }: TimerProviderProps) {
         registerSession,
         playSequence,
         playSequenceLoop,
+        pauseTimer, // Added pauseTimer to dependency array
     ]);
 
     /**
-     * Start the timer
+     * Sends a 'START' message to the Web Worker.
      */
     const startTimer = useCallback(() => {
         if (workerRef.current) {
@@ -379,7 +419,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
     }, []);
 
     /**
-     * Pause the timer
+     * Sends a 'PAUSE' message to the Web Worker.
      */
     const pauseTimer = useCallback(() => {
         if (workerRef.current) {
@@ -389,7 +429,8 @@ export function TimerProvider({ children }: TimerProviderProps) {
     }, []);
 
     /**
-     * Reset timer to initial state
+     * Resets the timer to its initial state.
+     * This also stops any currently playing sound sequences.
      */
     const resetTimer = useCallback(() => {
         console.log("[TIMER_CONTEXT][15] Resetting timer");
@@ -419,7 +460,8 @@ export function TimerProvider({ children }: TimerProviderProps) {
     }, [isPlayingSound, isPlayingWaitingSequence, stopPlayback]);
 
     /**
-     * Toggle timer running state
+     * Toggles the timer between 'running' and 'paused' states.
+     * It also handles registering pause activities and stopping sound cues.
      */
     const toggleTimer = useCallback(() => {
         if (!timerState) return;
@@ -457,7 +499,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
     ]);
 
     /**
-     * Toggle fullscreen
+     * Toggles the browser's fullscreen mode for the application.
      */
     const toggleFullscreen = useCallback(() => {
         if (!document.fullscreenElement) {
@@ -476,7 +518,8 @@ export function TimerProvider({ children }: TimerProviderProps) {
     }, []);
 
     /**
-     * Get current settings from worker before opening settings dialog
+     * Handles the action of opening the settings dialog.
+     * It requests the latest settings from the worker before opening.
      */
     const handleSettingsOpen = useCallback(() => {
         console.log(
@@ -489,9 +532,10 @@ export function TimerProvider({ children }: TimerProviderProps) {
     }, []);
 
     /**
-     * Save settings
-     * @param newSessionDuration New session duration in minutes and seconds
-     * @param newIntervalDuration New interval duration in minutes and seconds
+     * Saves new timer settings.
+     * It converts the TimeValue objects to seconds and sends them to the Web Worker.
+     * @param {TimeValue} newSessionDuration - The new session duration.
+     * @param {TimeValue} newIntervalDuration - The new interval duration.
      */
     const saveSettings = useCallback(
         (newSessionDuration: TimeValue, newIntervalDuration: TimeValue) => {
@@ -525,7 +569,9 @@ export function TimerProvider({ children }: TimerProviderProps) {
         []
     );
 
-    // Format time values
+    // --- Derived State and Context Value ---
+
+    // Memoize the formatted time values to prevent re-computation on every render.
     const sessionTime = timerState
         ? formatTime(timerState.sessionTimeLeft)
         : { minutes: 0, seconds: 0 };
@@ -539,11 +585,15 @@ export function TimerProvider({ children }: TimerProviderProps) {
         ? formatTime(settings.intervalDuration)
         : { minutes: 0, seconds: 0 };
 
+    /**
+     * A function to update the `isSettingsOpen` state.
+     * @param {boolean} isOpen - Whether the settings dialog should be open.
+     */
     const setIsSettingsOpen = (isOpen: boolean) => {
         dispatch({ type: "SET_IS_SETTINGS_OPEN", payload: isOpen });
     };
 
-    // Create context value
+    // The value object provided to the context consumers.
     const value: TimerContextType = {
         timerState,
         settings,

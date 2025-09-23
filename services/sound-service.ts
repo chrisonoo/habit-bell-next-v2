@@ -13,35 +13,38 @@ export type SoundSequenceItem =
 export type SoundSequence = SoundSequenceItem[];
 
 /**
- * Sound service class
- * Responsible for loading, buffering and playing sounds
+ * Manages loading, buffering, and playback of audio sounds and sequences.
+ * This service can play individual sounds, sequences of sounds and pauses, and loop sequences.
+ * It is intended to be used as a singleton within a client-side context.
  */
 export class SoundService {
-    // Map storing loaded audio elements
+    /** @private A map to store preloaded HTMLAudioElement instances, keyed by a friendly name. */
     private audioElements: Map<string, HTMLAudioElement> = new Map();
 
-    // Flag indicating whether a sound is currently playing
+    /** @private A flag indicating if a sound or sequence is currently playing. */
     private isPlaying = false;
 
-    // Current sound sequence
+    /** @private The current sequence of sounds and pauses being played. */
     private currentSequence: SoundSequence | null = null;
 
-    // Index of the currently playing sequence item
+    /** @private The index of the item currently being played in the `currentSequence`. */
     private currentSequenceIndex = 0;
 
-    // Timer ID for pause
+    /** @private The timer ID for the current pause in a sequence, used to clear the timeout if playback is stopped. */
     private pauseTimerId: NodeJS.Timeout | null = null;
 
-    // Callback function called when sequence playback ends
+    /** @private A callback function to be executed when the current sequence finishes. */
     private onSequenceEndCallback: (() => void) | null = null;
 
-    // Add a new property to track loop playback
+    /** @private A counter for the number of times a sequence has been looped. */
     private loopCount = 0;
+
+    /** @private The maximum number of times a sequence should loop. 0 means infinite. */
     private maxLoops = 0;
 
     /**
-     * Sound service constructor
-     * Initializes the service and loads default sounds
+     * Initializes the SoundService.
+     * This constructor should only be called on the client-side, as it interacts with browser APIs.
      */
     constructor() {
         console.log("[SOUND][01] Initializing sound service");
@@ -59,9 +62,12 @@ export class SoundService {
     }
 
     /**
-     * Loads a sound with the given name from the given URL
-     * @param name Sound name
-     * @param url URL to the sound file
+     * Loads a sound from a given URL and prepares it for playback.
+     * The loaded sound is stored in the `audioElements` map.
+     * This method should only be called on the client-side.
+     *
+     * @param name - A friendly name to identify the sound later.
+     * @param url - The URL of the audio file to load.
      */
     public loadSound(name: string, url: string): void {
         try {
@@ -88,9 +94,10 @@ export class SoundService {
     }
 
     /**
-     * Plays a sound with the given name
-     * @param name Name of the sound to play
-     * @returns Promise resolved when playback ends
+     * Plays a preloaded sound by its name.
+     *
+     * @param name - The name of the sound to play.
+     * @returns A promise that resolves when the sound has finished playing.
      */
     public async playSound(name: string): Promise<void> {
         const audio = this.audioElements.get(name);
@@ -151,10 +158,12 @@ export class SoundService {
     }
 
     /**
-     * Plays a sequence of sounds
-     * @param sequence Sequence of sounds to play
-     * @param onEnd Optional callback function called when the sequence ends
-     * @returns Promise resolved when the sequence playback ends
+     * Plays a sequence of sounds and pauses.
+     * If another sequence is already playing, it will be stopped first.
+     *
+     * @param sequence - An array of `SoundSequenceItem` objects to play in order.
+     * @param onEnd - An optional callback function to execute when the entire sequence has finished playing.
+     * @returns A promise that resolves when the sequence playback is initiated.
      */
     public async playSequence(
         sequence: SoundSequence,
@@ -175,11 +184,12 @@ export class SoundService {
     }
 
     /**
-     * Plays a sequence of sounds in a loop
-     * @param sequence Sequence of sounds to play
-     * @param maxLoops Maximum number of loops (0 for infinite)
-     * @param onEnd Optional callback function called when the sequence ends
-     * @returns Promise resolved when the sequence playback ends
+     * Plays a sequence of sounds and pauses in a loop.
+     *
+     * @param sequence - The sequence to play.
+     * @param maxLoops - The maximum number of times to loop the sequence. Defaults to 3.
+     * @param onEnd - An optional callback to run when the looping is complete.
+     * @returns A promise that resolves when the sequence loop is initiated.
      */
     public async playSequenceLoop(
         sequence: SoundSequence,
@@ -203,8 +213,8 @@ export class SoundService {
     }
 
     /**
-     * Plays the next item in the sequence
-     * @returns Promise resolved when the entire sequence playback ends
+     * @private Internal method to recursively play the next item in the current sequence.
+     * This method is called by `playSequence`.
      */
     private async playNextInSequence(): Promise<void> {
         if (
@@ -260,8 +270,8 @@ export class SoundService {
     }
 
     /**
-     * Plays the next item in the sequence with loop support
-     * @returns Promise resolved when the entire sequence playback ends
+     * @private Internal method to recursively play the next item in the current sequence with looping.
+     * This method is called by `playSequenceLoop`.
      */
     private async playNextInSequenceLoop(): Promise<void> {
         if (!this.currentSequence) {
@@ -339,7 +349,8 @@ export class SoundService {
     }
 
     /**
-     * Stops the currently playing sequence
+     * Stops all currently playing sounds and sequences immediately.
+     * It pauses all audio, clears any pending pauses, and resets the playback state.
      */
     public stopPlayback(): void {
         // Stop all sounds
@@ -363,8 +374,8 @@ export class SoundService {
     }
 
     /**
-     * Returns whether a sound is currently playing
-     * @returns true if a sound is playing, false otherwise
+     * Checks if a sound or sequence is currently playing.
+     * @returns `true` if audio is active, `false` otherwise.
      */
     public getIsPlaying(): boolean {
         return this.isPlaying;

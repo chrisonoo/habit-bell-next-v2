@@ -8,55 +8,33 @@ import { StatisticsDialog } from "@/components/statistics-dialog";
 import { useTranslations } from "next-intl";
 
 /**
- * Statistics Component
- *
- * Displays statistics for the application, including the number of pauses, intervals, and sessions.
- * Clicking on any statistic button opens a fullscreen dialog with detailed statistics.
- *
- * @returns {JSX.Element} The rendered component
+ * A component that displays a summary of today's activity statistics
+ * (sessions, intervals, pauses) in the top-left corner of the screen.
+ * Clicking on any statistic opens the detailed `StatisticsDialog`.
  */
 export function Statistics() {
-    // Get translations
+    // Hook for internationalization.
     const t = useTranslations("statistics");
 
-    // Get activity counts from context
+    // Get today's activity counts from the context.
     const { todayPauseCount, todayIntervalCount, todaySessionCount } =
         useActivityContext();
 
-    // State for controlling the visibility of the statistics dialog
+    // State to control the visibility of the statistics dialog.
     const [isDialogOpen, setIsDialogOpen] = useState(false);
 
-    // Log changes to activity counts for debugging
-    useEffect(() => {
-        console.log(
-            "[STATISTICS][DEBUG] Today's pause count updated:",
-            todayPauseCount
-        );
-    }, [todayPauseCount]);
-
-    useEffect(() => {
-        console.log(
-            "[STATISTICS][DEBUG] Today's interval count updated:",
-            todayIntervalCount
-        );
-    }, [todayIntervalCount]);
-
-    useEffect(() => {
-        console.log(
-            "[STATISTICS][DEBUG] Today's session count updated:",
-            todaySessionCount
-        );
-    }, [todaySessionCount]);
-
-    // Add a refresh mechanism when the dialog is opened
+    /**
+     * @private Opens the statistics dialog.
+     */
     const openStatisticsDialog = () => {
         setIsDialogOpen(true);
     };
 
     return (
         <>
+            {/* Container for the statistics counters, positioned absolutely. */}
             <div className="absolute top-4 left-4 z-10 flex gap-3 items-center">
-                {/* Session Counter Button */}
+                {/* Session Counter */}
                 <div className="flex gap-1 items-center">
                     <Button
                         variant="ghost"
@@ -72,7 +50,7 @@ export function Statistics() {
                     </div>
                 </div>
 
-                {/* Interval Counter Button */}
+                {/* Interval Counter */}
                 <div className="flex gap-1 items-center">
                     <Button
                         variant="ghost"
@@ -88,7 +66,7 @@ export function Statistics() {
                     </div>
                 </div>
 
-                {/* Pause Counter Button */}
+                {/* Pause Counter */}
                 <div className="flex gap-1 items-center">
                     <Button
                         variant="ghost"
@@ -103,11 +81,13 @@ export function Statistics() {
                 </div>
             </div>
 
-            {/* Statistics Dialog */}
+            {/* The detailed statistics dialog, which is controlled by this component. */}
             <StatisticsDialog
                 isOpen={isDialogOpen}
                 onOpenChange={setIsDialogOpen}
-                key={`${todaySessionCount}-${todayIntervalCount}-${todayPauseCount}`} // Force refresh when counts change
+                // A key is passed to force the dialog to re-mount and re-fetch its data
+                // whenever the activity counts change, ensuring the stats are up-to-date.
+                key={`${todaySessionCount}-${todayIntervalCount}-${todayPauseCount}`}
             />
         </>
     );

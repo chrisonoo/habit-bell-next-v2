@@ -8,38 +8,74 @@ import {
     type ReactNode,
 } from "react";
 
-// Interface for a single activity (pause, interval or session)
+/**
+ * Defines the structure for a single recorded user activity.
+ * These records are stored in IndexedDB.
+ */
 export interface ActivityRecord {
+    /** @property {number} [id] - The unique identifier for the record (auto-incremented). */
     id?: number;
-    type: "pause" | "interval" | "session"; // Activity type
-    timestamp: number; // Unix timestamp
-    date: string; // YYYY-MM-DD format for easier grouping
+    /** @property {"pause" | "interval" | "session"} type - The type of activity recorded. */
+    type: "pause" | "interval" | "session";
+    /** @property {number} timestamp - The Unix timestamp (in milliseconds) when the activity occurred. */
+    timestamp: number;
+    /** @property {string} date - The date of the activity in `YYYY-MM-DD` format for easy grouping and querying. */
+    date: string;
 }
 
-// Add the DailyStats interface after the ActivityRecord interface
+/**
+ * Defines the structure for aggregated daily statistics.
+ */
 export interface DailyStats {
+    /** @property {string} date - The date for which the stats are calculated. */
     date: string;
+    /** @property {number} sessions - The total number of sessions on that day. */
     sessions: number;
+    /** @property {number} intervals - The total number of intervals on that day. */
     intervals: number;
+    /** @property {number} pauses - The total number of pauses on that day. */
     pauses: number;
 }
 
-// Zaktualizuj interfejs ActivityContextType, dodając funkcję resetActivityStats
+/**
+ * Defines the shape of the Activity Context.
+ * This includes activity counts and functions to interact with the activity data.
+ */
 interface ActivityContextType {
+    /** @property {number} pauseCount - The total number of pauses recorded across all time. */
     pauseCount: number;
+    /** @property {number} todayPauseCount - The number of pauses recorded today. */
     todayPauseCount: number;
+    /** @property {number} intervalCount - The total number of intervals recorded across all time. */
     intervalCount: number;
+    /** @property {number} todayIntervalCount - The number of intervals recorded today. */
     todayIntervalCount: number;
+    /** @property {number} sessionCount - The total number of sessions recorded across all time. */
     sessionCount: number;
+    /** @property {number} todaySessionCount - The number of sessions recorded today. */
     todaySessionCount: number;
+    /** A function to register a new pause event. */
     registerPause: () => void;
+    /** A function to register a new interval completion event. */
     registerInterval: () => void;
+    /** A function to register a new session completion event. */
     registerSession: () => void;
+    /**
+     * A function to retrieve and aggregate all activity records into daily statistics.
+     * @returns {Promise<DailyStats[]>} A promise that resolves to an array of daily stats.
+     */
     getActivityStats: () => Promise<DailyStats[]>;
-    resetActivityStats: () => Promise<boolean>; // Dodana nowa funkcja
+    /**
+     * A function to completely wipe all activity data from the database.
+     * @returns {Promise<boolean>} A promise that resolves to `true` if the reset was successful.
+     */
+    resetActivityStats: () => Promise<boolean>;
 }
 
-// Zaktualizuj defaultContext, dodając pustą implementację resetActivityStats
+/**
+ * The default state for the ActivityContext.
+ * Provides empty functions and zero-counts to prevent errors when the context is used without a provider.
+ */
 const defaultContext: ActivityContextType = {
     pauseCount: 0,
     todayPauseCount: 0,
@@ -51,35 +87,56 @@ const defaultContext: ActivityContextType = {
     registerInterval: () => {},
     registerSession: () => {},
     getActivityStats: async () => [],
-    resetActivityStats: async () => false, // Dodana nowa funkcja
+    resetActivityStats: async () => false,
 };
 
-// Create context
+/**
+ * The React Context object for activity data.
+ */
 const ActivityContext = createContext<ActivityContextType>(defaultContext);
 
-// Hook for using activity context
+/**
+ * A custom hook to easily access the ActivityContext.
+ * This should be used by any component that needs to read activity data or register new activities.
+ * @throws {Error} If used outside of an `ActivityProvider`.
+ * @returns The activity context.
+ */
 export const useActivityContext = () => useContext(ActivityContext);
 
-// Props for context provider
+/**
+ * Defines the props for the ActivityProvider component.
+ */
 interface ActivityProviderProps {
+    /** @property {ReactNode} children - The child components that will have access to this context. */
     children: ReactNode;
 }
 
-// Activity context provider
+/**
+ * The provider component for the ActivityContext.
+ * It handles all the logic for tracking, storing, and retrieving user activity data
+ * using IndexedDB. It should wrap the part of the application that needs access to this data.
+ */
 export function ActivityProvider({ children }: ActivityProviderProps) {
-    // State for total pause count and today's pause count
+    // State for the total number of pauses recorded across all time.
     const [pauseCount, setPauseCount] = useState(0);
+    // State for the number of pauses recorded today.
     const [todayPauseCount, setTodayPauseCount] = useState(0);
 
-    // State for total interval count and today's interval count
+    // State for the total number of intervals recorded across all time.
     const [intervalCount, setIntervalCount] = useState(0);
+    // State for the number of intervals recorded today.
     const [todayIntervalCount, setTodayIntervalCount] = useState(0);
 
-    // State for total session count and today's session count
+    // State for the total number of sessions recorded across all time.
     const [sessionCount, setSessionCount] = useState(0);
+    // State for the number of sessions recorded today.
     const [todaySessionCount, setTodaySessionCount] = useState(0);
 
-    // Helper function to format date in YYYY-MM-DD format
+    /**
+     * @private A helper function to format a Date object into a `YYYY-MM-DD` string.
+     * @param {Date} date - The date to format.
+     * @returns {string} The formatted date string.
+     */
     const formatDate = (date: Date): string => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -87,7 +144,11 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
         return `${year}-${month}-${day}`;
     };
 
-    // Function to open database
+    /**
+     * @private Opens and sets up the IndexedDB database.
+     * This function handles the creation and upgrading of the database schema.
+     * @returns {Promise<IDBDatabase>} A promise that resolves with the database instance.
+     */
     const openDatabase = (): Promise<IDBDatabase> => {
         return new Promise((resolve, reject) => {
             const request = indexedDB.open("habit-bell-db", 2);
@@ -138,8 +199,11 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
         });
     };
 
-    // Add the getActivityStats function to the ActivityProvider
-    // Add this function inside the ActivityProvider component before the value declaration
+    /**
+     * Retrieves all activity records from IndexedDB and groups them by date
+     * to calculate daily statistics.
+     * @returns {Promise<DailyStats[]>} A promise that resolves to an array of daily stats.
+     */
     const getActivityStats = async (): Promise<DailyStats[]> => {
         try {
             console.log("[ACTIVITY][DEBUG] Getting activity statistics");
@@ -214,8 +278,11 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
         }
     };
 
-    // Dodaj implementację funkcji resetActivityStats w komponencie ActivityProvider
-    // Dodaj tę funkcję przed deklaracją value
+    /**
+     * Clears all activity records from the 'activities' object store in IndexedDB.
+     * Also resets all the in-memory state counters to zero.
+     * @returns {Promise<boolean>} A promise that resolves to `true` on success and `false` on failure.
+     */
     const resetActivityStats = async (): Promise<boolean> => {
         try {
             console.log("[ACTIVITY][DEBUG] Resetting all activity statistics");
@@ -224,7 +291,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
             const transaction = db.transaction("activities", "readwrite");
             const store = transaction.objectStore("activities");
 
-            // Usuń wszystkie rekordy aktywności
+            // Clear all records from the object store
             return new Promise((resolve, reject) => {
                 const request = store.clear();
 
@@ -233,7 +300,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
                         "[ACTIVITY][DEBUG] All activity statistics cleared successfully"
                     );
 
-                    // Zresetuj liczniki
+                    // Reset all state counters
                     setPauseCount(0);
                     setTodayPauseCount(0);
                     setIntervalCount(0);
@@ -265,7 +332,12 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
         }
     };
 
-    // Function to register new activity (pause, interval or session)
+    /**
+     * @private A generic function to register a new activity.
+     * It creates an `ActivityRecord` and saves it to IndexedDB.
+     * On successful save, it updates the relevant state counters.
+     * @param {"pause" | "interval" | "session"} type - The type of activity to register.
+     */
     const registerActivity = async (type: "pause" | "interval" | "session") => {
         try {
             console.log(`[ACTIVITY][DEBUG] Registering new ${type}`);
@@ -313,12 +385,18 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
         }
     };
 
-    // Functions to register specific activity types
+    /** A public-facing function to register a 'pause' activity. */
     const registerPause = () => registerActivity("pause");
+    /** A public-facing function to register an 'interval' activity. */
     const registerInterval = () => registerActivity("interval");
+    /** A public-facing function to register a 'session' activity. */
     const registerSession = () => registerActivity("session");
 
-    // Effect to load activity counts on initialization
+    /**
+     * An effect hook that runs once on component mount.
+     * It loads the initial activity counts (both total and for today) from IndexedDB
+     * and populates the component's state.
+     */
     useEffect(() => {
         const loadActivityCounts = async () => {
             try {
@@ -381,8 +459,8 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
         loadActivityCounts();
     }, []);
 
-    // Zaktualizuj obiekt value, dodając funkcję resetActivityStats
-    const value = {
+    // The value provided to the context consumers.
+    const value: ActivityContextType = {
         pauseCount,
         todayPauseCount,
         intervalCount,
@@ -393,7 +471,7 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
         registerInterval,
         registerSession,
         getActivityStats,
-        resetActivityStats, // Dodana nowa funkcja
+        resetActivityStats,
     };
 
     return (

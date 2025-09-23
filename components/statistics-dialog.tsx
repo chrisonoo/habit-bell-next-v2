@@ -42,51 +42,47 @@ import {
 } from "@/contexts/activity-context";
 
 /**
- * Props for the StatisticsDialog component
- * @interface StatisticsDialogProps
- * @property {boolean} isOpen - Whether the dialog is currently open
- * @property {function} onOpenChange - Function to call when the dialog open state changes
- * @property {string} [key] - Optional key for forcing re-renders
+ * Defines the props for the StatisticsDialog component.
  */
 interface StatisticsDialogProps {
+    /** @property {boolean} isOpen - Controls whether the dialog is visible. */
     isOpen: boolean;
+    /** @property {(open: boolean) => void} onOpenChange - Callback function invoked when the dialog's open state changes. */
     onOpenChange: (open: boolean) => void;
+    /** @property {string} [key] - An optional key to force re-renders of the component. */
     key?: string;
 }
 
 /**
- * StatisticsDialog Component
+ * A fullscreen dialog component that displays historical activity statistics.
+ * It fetches data from the `ActivityContext` and presents it in a sortable table.
+ * It also provides an option to reset all statistics.
  *
- * This component displays a fullscreen dialog with daily statistics
- * including sessions, intervals, and pauses.
- *
- * @param {StatisticsDialogProps} props - Component props
- * @returns {JSX.Element} The rendered component
+ * @param {StatisticsDialogProps} props - The props for the component.
  */
 export function StatisticsDialog({
     isOpen,
     onOpenChange,
 }: StatisticsDialogProps) {
-    // Get translations
+    // Hooks for internationalization.
     const t = useTranslations("statistics");
     const tAccess = useTranslations("accessibility");
 
-    // Get the getActivityStats function from the context
+    // Get functions for interacting with activity data from the context.
     const { getActivityStats, resetActivityStats } = useActivityContext();
 
-    // State for storing the statistics data
+    // State to hold the array of daily statistics data.
     const [stats, setStats] = useState<DailyStats[]>([]);
-
-    // State for tracking the sort direction
+    // State to track the current sorting direction of the table.
     const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
-
-    // State for tracking loading status
+    // State to manage the loading indicator while data is being fetched.
     const [isLoading, setIsLoading] = useState(false);
-
-    // State for alert dialog
+    // State to control the visibility of the "Reset Statistics" confirmation dialog.
     const [isAlertOpen, setIsAlertOpen] = useState(false);
 
-    // Load statistics data when the dialog is opened
+    /**
+     * An effect hook that triggers loading the statistics whenever the dialog is opened.
+     */
     useEffect(() => {
         if (isOpen) {
             loadStats();
@@ -94,7 +90,8 @@ export function StatisticsDialog({
     }, [isOpen]);
 
     /**
-     * Load statistics data from IndexedDB
+     * @private Asynchronously loads the statistics from the database via the context,
+     * sorts them, and updates the component's state.
      */
     const loadStats = useCallback(async () => {
         try {
@@ -112,7 +109,8 @@ export function StatisticsDialog({
     }, [getActivityStats, sortDirection]);
 
     /**
-     * Reset all activity statistics
+     * @private Handles the action of resetting all activity statistics.
+     * It calls the context function to clear the data and then resets the local state.
      */
     const handleResetStats = async () => {
         try {
@@ -132,10 +130,11 @@ export function StatisticsDialog({
     };
 
     /**
-     * Sort statistics data by date
-     * @param {DailyStats[]} data - The data to sort
-     * @param {"asc" | "desc"} direction - The sort direction
-     * @returns {DailyStats[]} The sorted data
+     * @private A utility function to sort an array of DailyStats by date.
+     *
+     * @param {DailyStats[]} data - The array of statistics to sort.
+     * @param {"asc" | "desc"} direction - The desired sorting direction.
+     * @returns {DailyStats[]} The new sorted array.
      */
     const sortStatsByDate = (
         data: DailyStats[],
@@ -150,7 +149,8 @@ export function StatisticsDialog({
     };
 
     /**
-     * Toggle the sort direction
+     * @private Toggles the sorting direction of the statistics table between ascending and descending
+     * and re-sorts the data.
      */
     const toggleSortDirection = () => {
         const newDirection = sortDirection === "asc" ? "desc" : "asc";
