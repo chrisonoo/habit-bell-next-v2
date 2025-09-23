@@ -31,7 +31,7 @@ import {
     type LanguageType,
 } from "@/contexts/app-settings-context";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams } from "next-intl";
 
 /**
  * Defines the props for the AppDropdownMenu component.

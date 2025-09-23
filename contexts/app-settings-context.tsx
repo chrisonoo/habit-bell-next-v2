@@ -7,9 +7,12 @@ import {
     useEffect,
     type ReactNode,
 } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { useParams } from "next/navigation";
-import type { Locale } from "@/config";
+import { createSharedPathnamesNavigation } from "next-intl/navigation";
+import { useParams } from "next-intl";
+import { locales, type Locale } from "@/config";
+
+// Use locale-aware routing
+const { usePathname, useRouter } = createSharedPathnamesNavigation({ locales });
 
 /**
  * Defines the possible theme types for the application.
