@@ -3,6 +3,14 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import {
     Dialog,
     DialogContent,
     DialogHeader,
@@ -217,65 +225,67 @@ export function StatisticsDialog({
                             <p>{t("noData")}</p>
                         </div>
                     ) : (
-                        <div className="w-full">
-                            {/* Table header - Reduced font size for mobile */}
-                            <div className="grid grid-cols-4 gap-2 mb-4 font-semibold border-b pb-2">
-                                <div className="flex items-center gap-1">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="p-1 h-auto"
-                                        onClick={toggleSortDirection}
-                                    >
-                                        <span className="text-xs sm:text-sm">
-                                            {t("date")}
-                                        </span>
-                                        <ArrowUpDown className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
-                                    </Button>
-                                </div>
-                                <div className="flex items-center justify-center gap-1">
-                                    <CircleDollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
-                                    <span className="text-xs sm:text-sm">
-                                        {t("sessions")}
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-center gap-1">
-                                    <Flag className="h-3 w-3 sm:h-4 sm:w-4" />
-                                    <span className="text-xs sm:text-sm">
-                                        {t("intervals")}
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-center gap-1">
-                                    <CirclePause className="h-3 w-3 sm:h-4 sm:w-4" />
-                                    <span className="text-xs sm:text-sm">
-                                        {t("pauses")}
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Table rows */}
-                            {stats.map((stat) => (
-                                <div
-                                    key={stat.date}
-                                    className="grid grid-cols-4 gap-2 py-3 border-b"
-                                >
-                                    <div className="flex items-center">
-                                        <span className="text-xs sm:text-sm">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="p-1 h-auto"
+                                            onClick={toggleSortDirection}
+                                        >
+                                            <span className="text-xs sm:text-sm">
+                                                {t("date")}
+                                            </span>
+                                            <ArrowUpDown className="ml-1 h-3 w-3 sm:h-4 sm:w-4" />
+                                        </Button>
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        <div className="flex items-center justify-center gap-1">
+                                            <CircleDollarSign className="h-3 w-3 sm:h-4 sm:w-4" />
+                                            <span className="text-xs sm:text-sm">
+                                                {t("sessions")}
+                                            </span>
+                                        </div>
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        <div className="flex items-center justify-center gap-1">
+                                            <Flag className="h-3 w-3 sm:h-4 sm:w-4" />
+                                            <span className="text-xs sm:text-sm">
+                                                {t("intervals")}
+                                            </span>
+                                        </div>
+                                    </TableHead>
+                                    <TableHead className="text-center">
+                                        <div className="flex items-center justify-center gap-1">
+                                            <CirclePause className="h-3 w-3 sm:h-4 sm:w-4" />
+                                            <span className="text-xs sm:text-sm">
+                                                {t("pauses")}
+                                            </span>
+                                        </div>
+                                    </TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {stats.map((stat) => (
+                                    <TableRow key={stat.date}>
+                                        <TableCell className="text-xs sm:text-sm">
                                             {stat.date}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center justify-center text-xs sm:text-sm">
-                                        {stat.sessions}
-                                    </div>
-                                    <div className="flex items-center justify-center text-xs sm:text-sm">
-                                        {stat.intervals}
-                                    </div>
-                                    <div className="flex items-center justify-center text-xs sm:text-sm">
-                                        {stat.pauses}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                                        </TableCell>
+                                        <TableCell className="text-center text-xs sm:text-sm">
+                                            {stat.sessions}
+                                        </TableCell>
+                                        <TableCell className="text-center text-xs sm:text-sm">
+                                            {stat.intervals}
+                                        </TableCell>
+                                        <TableCell className="text-center text-xs sm:text-sm">
+                                            {stat.pauses}
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
                     )}
                 </div>
             </DialogContent>
