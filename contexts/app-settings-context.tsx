@@ -94,6 +94,8 @@ export function AppSettingsProvider({ children }: AppSettingsProviderProps) {
     const [language, setLanguageState] = useState<LanguageType>(
         locale as LanguageType
     );
+    // State to track client-side mount
+    const [isMounted, setIsMounted] = useState(false);
 
     /**
      * An effect hook that runs on component mount and when the locale changes.
@@ -149,6 +151,9 @@ export function AppSettingsProvider({ children }: AppSettingsProviderProps) {
                 router.push(newPathname);
             }
         }
+
+        // Mark as mounted after initial effects
+        setIsMounted(true);
     }, [locale, pathname, router]);
 
     /**
@@ -206,6 +211,11 @@ export function AppSettingsProvider({ children }: AppSettingsProviderProps) {
         setTheme,
         setLanguage,
     };
+
+    // Prevent rendering children on the server to avoid hydration mismatch
+    if (!isMounted) {
+        return null;
+    }
 
     return (
         <AppSettingsContext.Provider value={value}>
