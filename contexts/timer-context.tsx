@@ -7,6 +7,7 @@ import {
     useEffect,
     useCallback,
     useState,
+    useReducer,
     type ReactNode,
 } from "react";
 import { useActivityContext } from "@/contexts/activity-context";
@@ -102,17 +103,67 @@ interface TimerProviderProps {
 /**
  * Timer Provider component
  */
+// Reducer state
+interface TimerProviderState {
+    timerState: TimerState | null;
+    settings: TimerSettings | null;
+    isSettingsOpen: boolean;
+    isPlayingSound: boolean;
+    isPlayingWaitingSequence: boolean;
+}
+
+// Reducer actions
+type Action =
+    | { type: "SET_TIMER_STATE"; payload: TimerState }
+    | { type: "SET_SETTINGS"; payload: TimerSettings }
+    | { type: "SET_IS_SETTINGS_OPEN"; payload: boolean }
+    | { type: "SET_IS_PLAYING_SOUND"; payload: boolean }
+    | { type: "SET_IS_PLAYING_WAITING_SEQUENCE"; payload: boolean };
+
+// Initial state for the reducer
+const initialState: TimerProviderState = {
+    timerState: null,
+    settings: null,
+    isSettingsOpen: false,
+    isPlayingSound: false,
+    isPlayingWaitingSequence: false,
+};
+
+// Reducer function
+function timerReducer(
+    state: TimerProviderState,
+    action: Action
+): TimerProviderState {
+    switch (action.type) {
+        case "SET_TIMER_STATE":
+            return { ...state, timerState: action.payload };
+        case "SET_SETTINGS":
+            return { ...state, settings: action.payload };
+        case "SET_IS_SETTINGS_OPEN":
+            return { ...state, isSettingsOpen: action.payload };
+        case "SET_IS_PLAYING_SOUND":
+            return { ...state, isPlayingSound: action.payload };
+        case "SET_IS_PLAYING_WAITING_SEQUENCE":
+            return { ...state, isPlayingWaitingSequence: action.payload };
+        default:
+            return state;
+    }
+}
+
 export function TimerProvider({ children }: TimerProviderProps) {
     // Worker references
     const workerRef = useRef<Worker | null>(null);
     const workerInitializedRef = useRef(false);
 
-    // Timer state
-    const [timerState, setTimerState] = useState<TimerState | null>(null);
-    const [settings, setSettings] = useState<TimerSettings | null>(null);
-
-    // Settings dialog state
-    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    // Use reducer for state management
+    const [state, dispatch] = useReducer(timerReducer, initialState);
+    const {
+        timerState,
+        settings,
+        isSettingsOpen,
+        isPlayingSound,
+        isPlayingWaitingSequence,
+    } = state;
 
     // Get activity registration functions from context
     const { registerPause, registerInterval, registerSession } =
@@ -128,10 +179,6 @@ export function TimerProvider({ children }: TimerProviderProps) {
     const sessionRegisteredRef = useRef(false);
     const isManualResetRef = useRef(false);
 
-    // Sound playback state
-    const [isPlayingSound, setIsPlayingSound] = useState(false);
-    const [isPlayingWaitingSequence, setIsPlayingWaitingSequence] =
-        useState(false);
 
     /**
      * Initialize Web Worker
@@ -168,13 +215,13 @@ export function TimerProvider({ children }: TimerProviderProps) {
 
                 // Handle timer state updates
                 if (type === "UPDATE") {
-                    // Update timer state using setState to trigger re-renders
-                    setTimerState(payload);
+                    // Update timer state using the reducer
+                    dispatch({ type: "SET_TIMER_STATE", payload });
                 }
                 // Handle settings updates
                 else if (type === "SETTINGS_UPDATE") {
-                    // Update timer settings using setState to trigger re-renders
-                    setSettings(payload);
+                    // Update timer settings using the reducer
+                    dispatch({ type: "SET_SETTINGS", payload });
                     console.log(
                         "[TIMER_CONTEXT][04] Settings updated:",
                         payload
@@ -265,32 +312,41 @@ export function TimerProvider({ children }: TimerProviderProps) {
             }
 
             // Play the end sequence first
-            setIsPlayingSound(true);
+            dispatch({ type: "SET_IS_PLAYING_SOUND", payload: true });
             playSequence(defaultIntervalEndSequence, () => {
                 console.log("[TIMER_CONTEXT][09] End sound sequence completed");
 
                 // After the end sequence completes, play the waiting sequence in a loop
-                setIsPlayingSound(false);
-                setIsPlayingWaitingSequence(true);
+                dispatch({ type: "SET_IS_PLAYING_SOUND", payload: false });
+                dispatch({
+                    type: "SET_IS_PLAYING_WAITING_SEQUENCE",
+                    payload: true,
+                });
 
                 playSequenceLoop(defaultIntervalWaitingSequence, 10, () => {
                     console.log(
                         "[TIMER_CONTEXT][10] Waiting sound sequence loop completed"
                     );
-                    setIsPlayingWaitingSequence(false);
+                    dispatch({
+                        type: "SET_IS_PLAYING_WAITING_SEQUENCE",
+                        payload: false,
+                    });
                 }).catch((error) => {
                     console.error(
                         "[TIMER_CONTEXT][11] Error playing waiting sound sequence:",
                         error
                     );
-                    setIsPlayingWaitingSequence(false);
+                    dispatch({
+                        type: "SET_IS_PLAYING_WAITING_SEQUENCE",
+                        payload: false,
+                    });
                 });
             }).catch((error) => {
                 console.error(
                     "[TIMER_CONTEXT][12] Error playing end sound sequence:",
                     error
                 );
-                setIsPlayingSound(false);
+                dispatch({ type: "SET_IS_PLAYING_SOUND", payload: false });
             });
         }
 
@@ -350,8 +406,11 @@ export function TimerProvider({ children }: TimerProviderProps) {
                 "[TIMER_CONTEXT][16] Resetting timer, stopping all sound sequences"
             );
             stopPlayback();
-            setIsPlayingSound(false);
-            setIsPlayingWaitingSequence(false);
+            dispatch({ type: "SET_IS_PLAYING_SOUND", payload: false });
+            dispatch({
+                type: "SET_IS_PLAYING_WAITING_SEQUENCE",
+                payload: false,
+            });
         }
 
         if (workerRef.current) {
@@ -380,7 +439,10 @@ export function TimerProvider({ children }: TimerProviderProps) {
                     "[TIMER_CONTEXT][19] Starting timer, stopping waiting sequence"
                 );
                 stopPlayback();
-                setIsPlayingWaitingSequence(false);
+                dispatch({
+                    type: "SET_IS_PLAYING_WAITING_SEQUENCE",
+                    payload: false,
+                });
             }
 
             startTimer();
@@ -423,7 +485,7 @@ export function TimerProvider({ children }: TimerProviderProps) {
         if (workerRef.current) {
             workerRef.current.postMessage({ type: "GET_INITIAL_SETTINGS" });
         }
-        setIsSettingsOpen(true);
+        dispatch({ type: "SET_IS_SETTINGS_OPEN", payload: true });
     }, []);
 
     /**
@@ -476,6 +538,10 @@ export function TimerProvider({ children }: TimerProviderProps) {
     const intervalDurationTime = settings
         ? formatTime(settings.intervalDuration)
         : { minutes: 0, seconds: 0 };
+
+    const setIsSettingsOpen = (isOpen: boolean) => {
+        dispatch({ type: "SET_IS_SETTINGS_OPEN", payload: isOpen });
+    };
 
     // Create context value
     const value: TimerContextType = {

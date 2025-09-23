@@ -327,97 +327,45 @@ export function ActivityProvider({ children }: ActivityProviderProps) {
                 const db = await openDatabase();
                 const transaction = db.transaction("activities", "readonly");
                 const store = transaction.objectStore("activities");
-                const typeIndex = store.index("type");
                 const today = formatDate(new Date());
 
-                // Get total pause count
-                const pauseCountRequest = typeIndex.count(
-                    IDBKeyRange.only("pause")
-                );
+                // Helper function to get counts for a specific activity type
+                const getCounts = (
+                    type: "pause" | "interval" | "session",
+                    setTotalCount: (count: number) => void,
+                    setTodayCount: (count: number) => void
+                ) => {
+                    const typeIndex = store.index("type");
+                    const countRequest = typeIndex.count(IDBKeyRange.only(type));
 
-                pauseCountRequest.onsuccess = () => {
-                    const totalPauseCount = pauseCountRequest.result;
-                    console.log(
-                        "[ACTIVITY][DEBUG] Total pause count:",
-                        totalPauseCount
-                    );
-                    setPauseCount(totalPauseCount);
-
-                    // Get today's pause count
-                    const typeDateIndex = store.index("type_date");
-                    const todayPauseCountRequest = typeDateIndex.count(
-                        IDBKeyRange.only(["pause", today])
-                    );
-
-                    todayPauseCountRequest.onsuccess = () => {
-                        const todayPauseCount = todayPauseCountRequest.result;
+                    countRequest.onsuccess = () => {
+                        const totalCount = countRequest.result;
                         console.log(
-                            "[ACTIVITY][DEBUG] Today's pause count:",
-                            todayPauseCount
+                            `[ACTIVITY][DEBUG] Total ${type} count:`,
+                            totalCount
                         );
-                        setTodayPauseCount(todayPauseCount);
+                        setTotalCount(totalCount);
+
+                        const typeDateIndex = store.index("type_date");
+                        const todayCountRequest = typeDateIndex.count(
+                            IDBKeyRange.only([type, today])
+                        );
+
+                        todayCountRequest.onsuccess = () => {
+                            const todayCount = todayCountRequest.result;
+                            console.log(
+                                `[ACTIVITY][DEBUG] Today's ${type} count:`,
+                                todayCount
+                            );
+                            setTodayCount(todayCount);
+                        };
                     };
                 };
 
-                // Get total interval count
-                const intervalCountRequest = typeIndex.count(
-                    IDBKeyRange.only("interval")
-                );
-
-                intervalCountRequest.onsuccess = () => {
-                    const totalIntervalCount = intervalCountRequest.result;
-                    console.log(
-                        "[ACTIVITY][DEBUG] Total interval count:",
-                        totalIntervalCount
-                    );
-                    setIntervalCount(totalIntervalCount);
-
-                    // Get today's interval count
-                    const typeDateIndex = store.index("type_date");
-                    const todayIntervalCountRequest = typeDateIndex.count(
-                        IDBKeyRange.only(["interval", today])
-                    );
-
-                    todayIntervalCountRequest.onsuccess = () => {
-                        const todayIntervalCount =
-                            todayIntervalCountRequest.result;
-                        console.log(
-                            "[ACTIVITY][DEBUG] Today's interval count:",
-                            todayIntervalCount
-                        );
-                        setTodayIntervalCount(todayIntervalCount);
-                    };
-                };
-
-                // Get total session count
-                const sessionCountRequest = typeIndex.count(
-                    IDBKeyRange.only("session")
-                );
-
-                sessionCountRequest.onsuccess = () => {
-                    const totalSessionCount = sessionCountRequest.result;
-                    console.log(
-                        "[ACTIVITY][DEBUG] Total session count:",
-                        totalSessionCount
-                    );
-                    setSessionCount(totalSessionCount);
-
-                    // Get today's session count
-                    const typeDateIndex = store.index("type_date");
-                    const todaySessionCountRequest = typeDateIndex.count(
-                        IDBKeyRange.only(["session", today])
-                    );
-
-                    todaySessionCountRequest.onsuccess = () => {
-                        const todaySessionCount =
-                            todaySessionCountRequest.result;
-                        console.log(
-                            "[ACTIVITY][DEBUG] Today's session count:",
-                            todaySessionCount
-                        );
-                        setTodaySessionCount(todaySessionCount);
-                    };
-                };
+                // Get counts for each activity type
+                getCounts("pause", setPauseCount, setTodayPauseCount);
+                getCounts("interval", setIntervalCount, setTodayIntervalCount);
+                getCounts("session", setSessionCount, setTodaySessionCount);
 
                 transaction.oncomplete = () => {
                     db.close();
